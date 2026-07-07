@@ -1,0 +1,15 @@
+baseURL = 'https://strataplatform.com/'
+locale = 'en-us'
+title = 'Strata Platform'
+theme = 'ananke'
+
+[params]
+  description = 'Distributed infrastructure platform: MonoFS filesystem, Guardian control plane, Doctor telemetry, Agent AI, LB-Edge load balancing.'
+  author = 'Strata Platform'
+
+[params.ananke]
+  github = ''
+  twitter = ''
+
+[markup.goldmark.renderer]
+  unsafe = true

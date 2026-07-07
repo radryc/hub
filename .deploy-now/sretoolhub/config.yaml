@@ -1,0 +1,6 @@
+bootstrap:
+  excludes:
+    - .deploy-now
+recurring:
+  excludes:
+    - .deploy-now
