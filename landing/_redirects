@@ -1,0 +1,4 @@
+# Canonical host. Cloudflare also offers a zone-level redirect rule;
+# this keeps the behaviour in the repo for direct-upload deployments.
+https://www.stratasre.com/* https://stratasre.com/:splat 301!
+http://stratasre.com/* https://stratasre.com/:splat 301!

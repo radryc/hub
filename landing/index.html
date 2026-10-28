@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strata — open-source infrastructure, one surface</title>
+<meta name="description" content="Strata is an open-source, self-hosted infrastructure stack: MonoFS, Guardian, Doctor, and Agent. Apache-2.0, developed in the open.">
+<meta name="theme-color" content="#060a14">
+<link rel="canonical" href="https://stratasre.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://stratasre.com/">
+<meta property="og:title" content="Strata — open-source infrastructure, one surface">
+<meta property="og:description" content="MonoFS stores it. Guardian ships it. Doctor sees it. Agent explains it. Open source, self-hosted, Apache-2.0.">
+<meta property="og:image" content="https://stratasre.com/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Strata — open-source infrastructure, one surface">
+<meta name="twitter:description" content="MonoFS stores it. Guardian ships it. Doctor sees it. Agent explains it. Open source, self-hosted, Apache-2.0.">
+<meta name="twitter:image" content="https://stratasre.com/assets/og.png">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "Strata",
+  "url": "https://stratasre.com/",
+  "description": "Strata is an open-source, self-hosted infrastructure stack: MonoFS, Guardian, Doctor, and Agent.",
+  "codeRepository": "https://github.com/radryc/strata",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "author": {
+    "@type": "Person",
+    "name": "radryc",
+    "url": "https://github.com/radryc"
+  }
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="spotlight" id="spotlight" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="Strata home">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+        <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+      </svg>
+      <span class="brand-word">STRATA</span>
+      <span class="brand-sub">/ OSS</span>
+    </a>
+
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="#platform">Platform</a>
+      <a href="#stack">Stack</a>
+      <a href="#flow">How it flows</a>
+      <a href="#code">Primitives</a>
+      <a href="#why">Why Strata</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="btn btn-ghost btn-sm" href="https://github.com/radryc/strata" target="_blank" rel="noopener">GitHub ↗</a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero-aurora" aria-hidden="true"></div>
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow reveal"><span class="pulse-dot"></span> Strata · open source, self-hosted</p>
+        <h1 class="reveal">The whole stack.<br><span class="grad">One surface.</span></h1>
+        <p class="hero-lead reveal">Strata unites <strong>MonoFS</strong>, <strong>Guardian</strong>, <strong>Doctor</strong>, and <strong>Agent</strong> — open-source engines for your source, deployments, telemetry, and assistance. Apache-2.0, self-hosted, and developed in the open.</p>
+        <div class="hero-actions reveal">
+          <a class="btn btn-primary" href="https://github.com/radryc/strata" target="_blank" rel="noopener">Browse the source <span class="btn-arrow" aria-hidden="true">↗</span></a>
+          <a class="btn btn-ghost" href="#flow">See how it flows <span class="btn-arrow" aria-hidden="true">→</span></a>
+        </div>
+        <ul class="hero-meta reveal" aria-label="Platform properties">
+          <li>Open source</li>
+          <li>Apache-2.0</li>
+          <li>Self-hosted</li>
+          <li>K8s · Docker · AWS</li>
+        </ul>
+      </div>
+
+      <div class="hero-art reveal" aria-hidden="true">
+        <div class="orbit orbit-a"></div>
+        <div class="orbit orbit-b"></div>
+        <div class="console" id="console">
+          <div class="console-head">
+            <span class="win-dots"><i></i><i></i><i></i></span>
+            <span class="console-title">strata://production</span>
+            <span class="console-live"><i></i>live</span>
+          </div>
+          <div class="console-body">
+            <div class="console-row" data-tone="green">
+              <span class="c-icon">◇</span>
+              <div class="c-copy">
+                <b>MonoFS</b>
+                <span>workspace mounted · search ready</span>
+              </div>
+              <span class="chip chip-ok">ready</span>
+            </div>
+
+            <div class="console-row" data-tone="blue">
+              <span class="c-icon">⬡</span>
+              <div class="c-copy">
+                <b>Guardian</b>
+                <span>api-server · dependents resolved</span>
+              </div>
+              <span class="chip chip-run">applying</span>
+              <div class="pipeline" aria-hidden="true">
+                <span class="step done">DIFF</span>
+                <i></i>
+                <span class="step done">CHECK</span>
+                <i></i>
+                <span class="step active">APPLY</span>
+              </div>
+            </div>
+
+            <div class="console-row" data-tone="amber">
+              <span class="c-icon">◉</span>
+              <div class="c-copy">
+                <b>Doctor</b>
+                <span>trace 9f3c… · 7 spans · healthy</span>
+              </div>
+              <span class="chip chip-ok">nominal</span>
+              <svg class="spark" viewBox="0 0 120 28" preserveAspectRatio="none">
+                <path d="M0 20 10 18 20 21 30 12 40 15 50 8 60 12 70 5 80 10 90 7 100 11 110 4 120 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+
+            <div class="console-row" data-tone="violet">
+              <span class="c-icon">✦</span>
+              <div class="c-copy">
+                <b>Agent</b>
+                <span>drift explained · plan ready</span>
+              </div>
+              <span class="chip chip-violet">proposed</span>
+            </div>
+          </div>
+          <div class="console-foot">
+            <span>commit <code>a91f2c</code></span>
+            <span class="foot-arrow">→</span>
+            <span>reconciled</span>
+            <span class="foot-arrow">→</span>
+            <span>observed</span>
+            <span class="foot-arrow">→</span>
+            <span>explained</span>
+          </div>
+        </div>
+        <span class="float-chip chip-a">no clones</span>
+        <span class="float-chip chip-b">zero drift</span>
+        <span class="float-chip chip-c">one trace</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>Virtual monorepo</span><i></i>
+      <span>Intent-based deploy</span><i></i>
+      <span>Unified telemetry</span><i></i>
+      <span>Approval-gated actions</span><i></i>
+      <span>Drift detection</span><i></i>
+      <span>OCI registry</span><i></i>
+      <span>Grafana-compatible</span><i></i>
+      <span>Encrypted at rest</span><i></i>
+      <span>One storage fabric</span><i></i>
+      <span>Virtual monorepo</span><i></i>
+      <span>Intent-based deploy</span><i></i>
+      <span>Unified telemetry</span><i></i>
+      <span>Approval-gated actions</span><i></i>
+      <span>Drift detection</span><i></i>
+      <span>OCI registry</span><i></i>
+      <span>Grafana-compatible</span><i></i>
+      <span>Encrypted at rest</span><i></i>
+      <span>One storage fabric</span><i></i>
+    </div>
+  </div>
+
+  <!-- PLATFORM -->
+  <section class="section" id="platform">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">The platform</p>
+        <h2 class="reveal">Four engines.<br><span class="dim">One source of truth.</span></h2>
+        <p class="section-lead reveal">Most platforms are a pile of tools with a shared login. Strata is built on a shared substrate — the same files, state, and telemetry underneath every layer. The whole stack is open source and runs on your own hardware.</p>
+      </div>
+
+      <div class="fabric reveal">
+        <div class="fabric-top">
+          <div class="fabric-node" data-accent="blue">
+            <span class="fabric-kicker">Deploy</span>
+            <b>Guardian</b>
+            <small>intent → diff → apply</small>
+          </div>
+          <div class="fabric-node" data-accent="amber">
+            <span class="fabric-kicker">Observe</span>
+            <b>Doctor</b>
+            <small>traces · logs · metrics</small>
+          </div>
+          <div class="fabric-node" data-accent="violet">
+            <span class="fabric-kicker">Assist</span>
+            <b>Agent</b>
+            <small>ask · plan · approve</small>
+          </div>
+        </div>
+        <div class="fabric-flows" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="fabric-base">
+          <div class="base-label"><span class="pulse-dot"></span> MonoFS storage fabric</div>
+          <div class="base-tags">
+            <span>source</span><span>images</span><span>desired state</span><span>telemetry</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform-points">
+        <div class="point reveal">
+          <span class="point-num">01</span>
+          <h3>One fabric, not four silos</h3>
+          <p>Source, artifacts, deployment state, and telemetry share one durable substrate. No copy jobs, no sync drift.</p>
+        </div>
+        <div class="point reveal">
+          <span class="point-num">02</span>
+          <h3>Deployment context everywhere</h3>
+          <p>Every trace and metric can be read next to the rollout that produced it. “What changed?” stops being a hunt.</p>
+        </div>
+        <div class="point reveal">
+          <span class="point-num">03</span>
+          <h3>Open primitives, no trapdoor</h3>
+          <p>FUSE, OTLP, OCI, Prometheus, Loki, and Zipkin. Strata connects the standards you already run.</p>
+        </div>
+        <div class="point reveal">
+          <span class="point-num">04</span>
+          <h3>Safe by construction</h3>
+          <p>Desired state is diffed and checked before it is applied. Drift is visible, mutations are attributable.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section class="section stack" id="stack">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">The stack</p>
+          <h2 class="reveal">Hard problems.<br><span class="dim">One fabric.</span></h2>
+        </div>
+        <p class="section-lead reveal">Each engine owns a hard problem. The magic is what happens when they share the same fabric.</p>
+      </div>
+
+      <div class="cards">
+        <article class="product-card reveal" data-accent="green">
+          <div class="card-glow" aria-hidden="true"></div>
+          <header class="card-head">
+            <span class="card-index">01 / Store</span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </header>
+          <div class="card-icon">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m20 5 14 7-14 7L6 12l14-7Z"/>
+              <path d="m6 20 14 7 14-7M6 28l14 7 14-7"/>
+            </svg>
+          </div>
+          <h3>MonoFS</h3>
+          <p class="card-tag">One workspace. Every repo.</p>
+          <p class="card-body">Mount thousands of independent repositories as one writable virtual monorepo. Edit locally, publish explicitly, and keep the whole platform's bytes in one place.</p>
+          <ul class="card-list">
+            <li>FUSE mount with a writable overlay</li>
+            <li>Explicit <code>monofs-session commit</code></li>
+            <li>OCI registry, code search, and log engine on the same fabric</li>
+            <li>HRW-sharded, replicated, encrypted at rest</li>
+          </ul>
+          <button class="card-link" data-tab-target="monofs" type="button">See the primitive <span aria-hidden="true">→</span></button>
+        </article>
+
+        <article class="product-card reveal" data-accent="blue">
+          <div class="card-glow" aria-hidden="true"></div>
+          <header class="card-head">
+            <span class="card-index">02 / Ship</span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </header>
+          <div class="card-icon">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 4.5 33 9v10c0 8.2-5.4 13.8-13 16.5C12.4 32.8 7 27.2 7 19V9l13-4.5Z"/>
+              <path d="m14 19 4 4 8-8"/>
+            </svg>
+          </div>
+          <h3>Guardian</h3>
+          <p class="card-tag">Declare it. Guardian lands it.</p>
+          <p class="card-body">An intent-based control plane that compiles desired state into a dependency graph, detects drift, and applies the delta across Kubernetes, Docker, AWS, or local targets.</p>
+          <ul class="card-list">
+            <li>Partitions, intents, and assets — not shell scripts</li>
+            <li>DIFF → CHECK → APPLY with automatic ordering</li>
+            <li>Pluggable pushers for K8s, Docker, AWS, local</li>
+            <li>Locked state, output interpolation, full audit trail</li>
+          </ul>
+          <button class="card-link" data-tab-target="guardian" type="button">See the primitive <span aria-hidden="true">→</span></button>
+        </article>
+
+        <article class="product-card reveal" data-accent="amber">
+          <div class="card-glow" aria-hidden="true"></div>
+          <header class="card-head">
+            <span class="card-index">03 / See</span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </header>
+          <div class="card-icon">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="20" cy="20" r="15.5"/>
+              <path d="M5 20h7l3-7 5 14 3-7h12"/>
+            </svg>
+          </div>
+          <h3>Doctor</h3>
+          <p class="card-tag">Every signal. One story.</p>
+          <p class="card-body">A privacy-first OpenTelemetry backend that stores traces, logs, and metrics together — then adds Guardian deployment context and Grafana-compatible APIs.</p>
+          <ul class="card-list">
+            <li>OTLP gRPC and HTTP ingest</li>
+            <li>HMAC tokenization before persistence</li>
+            <li>Guardian health and topology APIs</li>
+            <li>Prometheus, Loki, and Zipkin out of the box</li>
+          </ul>
+          <button class="card-link" data-tab-target="doctor" type="button">See the primitive <span aria-hidden="true">→</span></button>
+        </article>
+
+        <article class="product-card reveal" data-accent="violet">
+          <div class="card-glow" aria-hidden="true"></div>
+          <header class="card-head">
+            <span class="card-index">04 / Assist</span>
+            <span class="card-arrow" aria-hidden="true">↗</span>
+          </header>
+          <div class="card-icon">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M7 9h26v18H20l-8 6v-6H7V9Z"/>
+              <path d="M14 15h12M14 20h8"/>
+            </svg>
+          </div>
+          <h3>Agent</h3>
+          <p class="card-tag">Ask the platform. Approve the change.</p>
+          <p class="card-body">An assistant with live Guardian, Doctor, and MonoFS tools. It answers from evidence instead of guessing, plans the next change, and keeps every mutation behind an approval gate.</p>
+          <ul class="card-list">
+            <li>Otto for SRE work, Steve for code</li>
+            <li>Live tool calls over Guardian, Doctor, MonoFS</li>
+            <li>Approval-gated deploys and workspace edits</li>
+            <li>Local model, external API, or OpenCode</li>
+          </ul>
+          <button class="card-link" data-tab-target="agent" type="button">See the primitive <span aria-hidden="true">→</span></button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOW -->
+  <section class="section flow" id="flow">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">How it flows</p>
+        <h2 class="reveal">From commit<br><span class="dim">to clarity.</span></h2>
+        <p class="section-lead reveal">One loop. No hand-offs between tools. This is the path a change takes through Strata.</p>
+      </div>
+
+      <ol class="timeline">
+        <li class="timeline-item reveal">
+          <div class="time-marker">01</div>
+          <div class="time-body">
+            <span class="time-tag">Write</span>
+            <h3>Mount only what you need</h3>
+            <p>A developer opens a virtual monorepo, edits in a local overlay, and publishes one explicit commit. No giant clone, no waiting for an indexer.</p>
+            <span class="time-tech">MonoFS</span>
+          </div>
+        </li>
+        <li class="timeline-item reveal">
+          <div class="time-marker">02</div>
+          <div class="time-body">
+            <span class="time-tag">Reconcile</span>
+            <h3>Desired state becomes a plan</h3>
+            <p>Guardian compiles the dependency graph, shows the drift, checks that the change is safe, then applies it in the right order.</p>
+            <span class="time-tech">Guardian</span>
+          </div>
+        </li>
+        <li class="timeline-item reveal">
+          <div class="time-marker">03</div>
+          <div class="time-body">
+            <span class="time-tag">Observe</span>
+            <h3>Telemetry arrives with context</h3>
+            <p>Traces, logs, and metrics land in Doctor alongside the deployment event that produced them. The rollout is part of the trace.</p>
+            <span class="time-tech">Doctor</span>
+          </div>
+        </li>
+        <li class="timeline-item reveal">
+          <div class="time-marker">04</div>
+          <div class="time-body">
+            <span class="time-tag">Ask</span>
+            <h3>Ask the platform, then act</h3>
+            <p>Agent answers from live Guardian, Doctor, and MonoFS evidence, plans the next change, and keeps mutations behind approval.</p>
+            <span class="time-tech">Agent</span>
+          </div>
+        </li>
+      </ol>
+      <div class="loop-note reveal"><span aria-hidden="true">↺</span> And the loop keeps closing.</div>
+    </div>
+  </section>
+
+  <!-- CODE -->
+  <section class="section code-section" id="code">
+    <div class="wrap code-grid">
+      <div class="code-copy">
+        <p class="eyebrow reveal">The primitives</p>
+        <h2 class="reveal">Keep the<br><span class="dim">real thing.</span></h2>
+        <p class="section-lead reveal">Strata is a surface, not a proprietary layer. Underneath are filesystems, manifests, and standard protocols you can inspect, script, and take with you.</p>
+        <ul class="check-list reveal">
+          <li>No proprietary deployment DSL</li>
+          <li>No telemetry format you have to adopt</li>
+          <li>No data plane you cannot see into</li>
+        </ul>
+        <p class="code-note reveal">The snippets are the actual interfaces. Swap the hostnames for yours.</p>
+      </div>
+
+      <div class="code-panel reveal">
+        <div class="code-tabs" role="tablist" aria-label="Primitive examples">
+          <button class="code-tab is-active" id="tab-monofs" role="tab" aria-selected="true" aria-controls="panel-monofs" data-tab="monofs" type="button">MonoFS</button>
+          <button class="code-tab" id="tab-guardian" role="tab" aria-selected="false" aria-controls="panel-guardian" data-tab="guardian" type="button">Guardian</button>
+          <button class="code-tab" id="tab-doctor" role="tab" aria-selected="false" aria-controls="panel-doctor" data-tab="doctor" type="button">Doctor</button>
+          <button class="code-tab" id="tab-agent" role="tab" aria-selected="false" aria-controls="panel-agent" data-tab="agent" type="button">Agent</button>
+          <button class="copy-btn" id="copyBtn" type="button" aria-label="Copy code">Copy</button>
+        </div>
+
+        <div class="code-body">
+          <div class="code-panel-inner is-active" id="panel-monofs" role="tabpanel" aria-labelledby="tab-monofs">
+            <div class="code-file"><span class="lang">shell</span> mount a workspace</div>
+<pre><code><span class="tok-cmd">monofs-client</span> --mount=/dev/monorepo \
+  --router=monofs:9090 \
+  --virtual-monorepo --writable
+
+<span class="tok-comment"># work normally — git, IDEs, tests</span>
+<span class="tok-cmd">cd</span> /dev/monorepo && git status
+
+<span class="tok-comment"># publish explicitly</span>
+<span class="tok-cmd">monofs-session</span> diff
+<span class="tok-cmd">monofs-session</span> commit -m <span class="tok-str">"feat: ship the dashboard"</span></code></pre>
+          </div>
+
+          <div class="code-panel-inner" id="panel-guardian" role="tabpanel" aria-labelledby="tab-guardian" hidden>
+            <div class="code-file"><span class="lang">yaml</span> partitions/production.yaml</div>
+<pre><code><span class="tok-key">apiVersion:</span> guardian/v1alpha1
+<span class="tok-key">kind:</span> Partition
+<span class="tok-key">metadata:</span>
+  <span class="tok-key">name:</span> production
+<span class="tok-key">spec:</span>
+  <span class="tok-key">intents:</span>
+    - <span class="tok-key">name:</span> database
+      <span class="tok-key">targetPusher:</span> k8s-prod
+    - <span class="tok-key">name:</span> api-server
+      <span class="tok-key">targetPusher:</span> k8s-prod
+      <span class="tok-key">joins:</span> [database]
+
+<span class="tok-comment"># drift is computed before anything is applied</span>
+<span class="tok-cmd">guardianctl</span> partition reconcile --partition production</code></pre>
+          </div>
+
+          <div class="code-panel-inner" id="panel-doctor" role="tabpanel" aria-labelledby="tab-doctor" hidden>
+            <div class="code-file"><span class="lang">shell</span> point telemetry at Doctor</div>
+<pre><code><span class="tok-key">export</span> OTEL_EXPORTER_OTLP_ENDPOINT=http://doctor:4317
+<span class="tok-key">export</span> OTEL_SERVICE_NAME=api-server
+
+<span class="tok-comment"># traces, logs, and metrics share one store</span>
+<span class="tok-cmd">curl</span> <span class="tok-str">"http://doctor:18080/v1/traces/&lt;traceID&gt;"</span>
+
+<span class="tok-comment"># read rollout health next to the telemetry</span>
+<span class="tok-cmd">curl</span> <span class="tok-str">"http://doctor:18080/v1/guardian/health?partition=production"</span></code></pre>
+          </div>
+
+          <div class="code-panel-inner" id="panel-agent" role="tabpanel" aria-labelledby="tab-agent" hidden>
+            <div class="code-file"><span class="lang">shell</span> ask the platform</div>
+<pre><code><span class="tok-cmd">cd</span> agent &amp;&amp; <span class="tok-cmd">docker</span> compose up -d
+<span class="tok-comment"># UI :3000 · API :8090</span>
+
+<span class="tok-cmd">curl</span> -s http://localhost:8090/api/chat \
+  -H <span class="tok-str">"content-type: application/json"</span> \
+  -d <span class="tok-str">'{"message":"why did production drift?"}'</span>
+
+<span class="tok-comment"># answers cite live state; mutations stay behind approval</span></code></pre>
+          </div>
+        </div>
+        <div class="code-foot">
+          <span>one fabric</span><span>standard protocols</span><span>no lock-in</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section class="section why" id="why">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Why Strata</p>
+        <h2 class="reveal">Fewer seams.<br><span class="dim">Better answers.</span></h2>
+      </div>
+
+      <div class="bento">
+        <article class="bento-card bento-wide reveal">
+          <span class="bento-kicker">One fabric</span>
+          <h3>Your source, images, state, and telemetry stop living in different worlds.</h3>
+          <p>MonoFS is the substrate under Guardian, Doctor, and Agent. That means fewer copies, fewer credentials, and one place to reason about durability.</p>
+          <div class="fabric-line" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </article>
+
+        <article class="bento-card reveal">
+          <span class="bento-kicker">Deployment-aware</span>
+          <h3>See the rollout inside the trace.</h3>
+          <p>Doctor ingests Guardian events directly. Error spikes and deploy timelines sit in the same window.</p>
+        </article>
+
+        <article class="bento-card reveal">
+          <span class="bento-kicker">Safe by default</span>
+          <h3>Check before apply.</h3>
+          <p>Drift is detected, changes are validated, and every write carries a principal, reason, and correlation ID.</p>
+        </article>
+
+        <article class="bento-card reveal">
+          <span class="bento-kicker">Privacy first</span>
+          <h3>Tokenize before you store.</h3>
+          <p>Doctor anonymizes sensitive fields with deterministic HMAC tokenization, per tenant, before persistence.</p>
+        </article>
+
+        <article class="bento-card reveal">
+          <span class="bento-kicker">Open interfaces</span>
+          <h3>Bring your own everything.</h3>
+          <p>OTLP collectors, Grafana dashboards, OCI images, S3 or GCS upstreams. Strata fits the stack you have.</p>
+        </article>
+
+        <article class="bento-card bento-wide reveal">
+          <span class="bento-kicker">Runs where you do</span>
+          <h3>Self-hosted from laptop to production.</h3>
+          <p>Kubernetes, Docker, AWS, or a single local process. Same intent model, same telemetry surface, same audit trail — wherever the work lands.</p>
+          <div class="run-grid" aria-hidden="true"><span>k8s</span><span>docker</span><span>aws</span><span>local</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section cta" id="contact">
+    <div class="cta-orb" aria-hidden="true"></div>
+    <div class="wrap cta-inner">
+      <p class="eyebrow reveal">Open source</p>
+      <h2 class="reveal">Read the code.<br><span class="grad">Run it yourself.</span></h2>
+      <p class="reveal">No sales call and no waiting list. Clone the repos, run the stack, and open an issue when something breaks. Issues and PRs are welcome.</p>
+      <div class="cta-actions reveal">
+        <a class="btn btn-primary" href="https://github.com/radryc/strata" target="_blank" rel="noopener">Browse on GitHub <span class="btn-arrow" aria-hidden="true">↗</span></a>
+        <a class="btn btn-ghost" href="#code">Read the primitives</a>
+      </div>
+      <p class="cta-small reveal">github.com/radryc/strata · Apache-2.0 · open source</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="#top" aria-label="Strata home">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+        <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+      </svg>
+        <span class="brand-word">STRATA</span>
+        <span class="brand-sub">/ OSS</span>
+      </a>
+      <p>Open-source (Apache-2.0) infrastructure for source, deployment, and telemetry. Developed in the open.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <div>
+        <span class="footer-head">Product</span>
+        <a href="#platform">Platform</a>
+        <a href="#stack">MonoFS · Guardian · Doctor · Agent</a>
+        <a href="#flow">How it flows</a>
+        <a href="#why">Why Strata</a>
+      </div>
+      <div>
+        <span class="footer-head">Source</span>
+        <a href="https://github.com/radryc/strata" target="_blank" rel="noopener">Strata project</a>
+        <a href="https://github.com/radryc/monofs" target="_blank" rel="noopener">MonoFS</a>
+        <a href="https://github.com/radryc/guardian" target="_blank" rel="noopener">Guardian</a>
+        <a href="https://github.com/radryc/doctor" target="_blank" rel="noopener">Doctor</a>
+        <a href="https://github.com/radryc/agent" target="_blank" rel="noopener">Agent</a>
+        <a href="https://github.com/radryc" target="_blank" rel="noopener">All repositories ↗</a>
+      </div>
+    </nav>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© <span id="year">2026</span> Strata · open source · Apache-2.0</span>
+    <span class="footer-status"><i></i> Open source · Apache-2.0 · contributions welcome</span>
+  </div>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>
