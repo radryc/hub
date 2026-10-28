@@ -20,7 +20,7 @@ landing/
 │   ├── favicon.svg       # Strata hexagon mark
 │   └── og.png            # 1200×630 social card
 ├── _headers              # security + cache headers (Pages)
-├── _redirects            # canonical host redirects (Pages)
+├── _redirects            # path redirects (host redirect is a zone rule)
 ├── robots.txt
 └── sitemap.xml
 ```
@@ -46,8 +46,9 @@ run from `hub/`.
 4. Deploy. Cloudflare serves `index.html` at the site root and `404.html` for
    unknown paths automatically.
 5. Open **Custom domains** and add `stratasre.com` and `www.stratasre.com`.
-   The included `_redirects` rule sends `www` to the apex. Cloudflare will add
-   the DNS records for you if the zone is on the same account.
+   Cloudflare will add the DNS records for you if the zone is on the same
+   account. Add a zone-level Redirect Rule for `www.stratasre.com` →
+   `stratasre.com`; Pages `_redirects` cannot match hostnames.
 
 ## Deploy from the CLI
 
