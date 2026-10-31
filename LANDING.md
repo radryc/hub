@@ -63,6 +63,9 @@ Preview branches can be deployed with `--branch <name>`.
 ## Editing the page
 
 - Copy, product claims, and section order all live in `landing/index.html`.
+- The hero **New** strip and the **Nightwatch** section are the adoption path
+  for Sentinel alerts and shadow-mode SRE. Keep them outcome-led and framed as
+  capabilities inside Doctor and Agent, not as a fifth engine.
 - Colors, type, spacing, and breakpoints live at the top of
   `landing/assets/style.css` under `:root`.
 - The four product cards and the code examples are deliberately aligned with

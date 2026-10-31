@@ -181,6 +181,15 @@
     </div>
   </section>
 
+  <!-- NEW -->
+  <div class="new-strip">
+    <div class="wrap new-strip-inner">
+      <span class="new-tag">New</span>
+      <p><strong>Sentinel alerting + Nightwatch.</strong> Alerts now arrive with evidence, confidence, and a handoff instead of a wall of noise.</p>
+      <a href="#nightwatch" class="new-link">See Nightwatch <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+
   <!-- TICKER -->
   <div class="ticker" aria-hidden="true">
     <div class="ticker-track">
@@ -230,12 +239,12 @@
           <div class="fabric-node" data-accent="amber">
             <span class="fabric-kicker">Observe</span>
             <b>Doctor</b>
-            <small>traces · logs · metrics</small>
+            <small>traces · logs · metrics · alerts</small>
           </div>
           <div class="fabric-node" data-accent="violet">
             <span class="fabric-kicker">Assist</span>
             <b>Agent</b>
-            <small>ask · plan · approve</small>
+            <small>ask · plan · approve · watch</small>
           </div>
         </div>
         <div class="fabric-flows" aria-hidden="true">
@@ -398,7 +407,7 @@
       <div class="section-head">
         <p class="eyebrow reveal">Nightwatch</p>
         <h2 class="reveal">The first line.<br><span class="dim">With receipts.</span></h2>
-        <p class="section-lead reveal">Nightwatch is the shadow-mode SRE observer inside Agent. It watches Sentinel alerts, investigates with Doctor, and hands you an evidence-backed incident instead of a noisy page. It never mutates infrastructure.</p>
+        <p class="section-lead reveal">Turn on one partition label. Nightwatch watches alerts, investigates with Doctor, and hands you the incident with the evidence already attached. Shadow mode by default — it never gets the keys.</p>
       </div>
 
       <div class="cards">
@@ -469,6 +478,11 @@
             <li>Timeline and activity ledger</li>
           </ul>
         </article>
+      </div>
+
+      <div class="section-actions reveal">
+        <a class="btn btn-primary" href="https://github.com/radryc/agent" target="_blank" rel="noopener">Read the shadow-mode contract <span class="btn-arrow" aria-hidden="true">↗</span></a>
+        <a class="btn btn-ghost" href="#flow">See the flow <span class="btn-arrow" aria-hidden="true">→</span></a>
       </div>
     </div>
   </section>
@@ -642,9 +656,9 @@
         </article>
 
         <article class="bento-card reveal">
-          <span class="bento-kicker">Deployment-aware</span>
-          <h3>See the rollout inside the trace.</h3>
-          <p>Doctor ingests Guardian events directly. Error spikes and deploy timelines sit in the same window.</p>
+          <span class="bento-kicker">Alert-aware</span>
+          <h3>The alert arrives with the deploy attached.</h3>
+          <p>Doctor ingests Guardian events directly. Nightwatch correlates alerts with traces, topology, and recent changes before it hands over an incident.</p>
         </article>
 
         <article class="bento-card reveal">
@@ -684,6 +698,7 @@
       <p class="reveal">No sales call and no waiting list. Clone the repos, run the stack, and open an issue when something breaks. Issues and PRs are welcome.</p>
       <div class="cta-actions reveal">
         <a class="btn btn-primary" href="https://github.com/radryc/strata" target="_blank" rel="noopener">Browse on GitHub <span class="btn-arrow" aria-hidden="true">↗</span></a>
+        <a class="btn btn-ghost" href="#nightwatch">See Nightwatch</a>
         <a class="btn btn-ghost" href="#code">Read the primitives</a>
       </div>
       <p class="cta-small reveal">github.com/radryc/strata · Apache-2.0 · open source</p>
