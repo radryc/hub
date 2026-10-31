@@ -97,8 +97,13 @@ four open-source engines:
 
 - **MonoFS** — the storage and source fabric
 - **Guardian** — the intent-based deployment plane
-- **Doctor** — the privacy-first observability plane
-- **Agent** — the approval-gated assistance plane
+- **Doctor** — the privacy-first observability plane, including Sentinel alerts
+- **Agent** — the approval-gated assistance plane, including Nightwatch
+
+Nightwatch is a mode inside Agent, not a fifth product. It runs in shadow mode:
+it watches alerts, investigates with Doctor, and hands off or escalates without
+mutating infrastructure. The page presents it as an Agent capability with its own
+section and flow step.
 
 "Unified surface" is positioning, not a fifth product. Strata is the front door
 and operating context that connects the four. The page should stay GitHub-first:
@@ -109,13 +114,4 @@ maps the component repos and the bootstrap flow. If the project later grows a
 company or a hosted offering, that is a positioning change and the hero, CTA,
 JSON-LD, and footer should be updated together.
 
-## Before going live
 
-- [ ] Confirm the `github.com/radryc/strata` umbrella repository and the
-      `github.com/radryc` profile resolve, along with MonoFS, Guardian, Doctor,
-      and Agent.
-- [ ] Replace or confirm the canonical host in `index.html`, `robots.txt`, and
-      `sitemap.xml` if the domain changes.
-- [ ] Check the site on a phone at 390 px wide.
-- [ ] Run Lighthouse against the deployed URL.
-- [ ] Optionally enable Cloudflare Web Analytics in the Pages project.

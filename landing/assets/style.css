@@ -2,27 +2,50 @@
    A single-page surface for MonoFS, Guardian, Doctor, and Agent.
    Palette and type follow the canonical Strata UI theme. */
 
+@import url("tokens.css");
+@import url("ui.css");
+
+@font-face {
+  font-family: "Manrope";
+  src: url("fonts/manrope-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("fonts/space-grotesk-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/jetbrains-mono-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
 :root {
-  --bg: #060a14;
-  --bg-soft: #0a0f1c;
-  --bg-card: #0d1220;
-  --ink: #e5ecf4;
-  --muted: #9bb0cf;
-  --faint: #7d8fa6;
-  --accent: #00ade4;
-  --accent-strong: #0091bf;
-  --accent-light: #7dd3f0;
-  --green: #00c369;
-  --blue: #00ade4;
-  --amber: #fcb519;
-  --violet: #8b7cf6;
-  --red: #ee5f54;
-  --line: rgba(255, 255, 255, .09);
-  --line-strong: rgba(255, 255, 255, .14);
-  --font: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --display: "Space Grotesk", "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  --ease: cubic-bezier(.22, .68, .2, 1);
+  --bg-soft: var(--strata-input);
+  --bg-card: var(--strata-panel);
+  --ink: var(--strata-text);
+  --faint: var(--strata-text-tertiary);
+  --accent-light: color-mix(in oklab, var(--strata-accent) 68%, white);
+  --blue: var(--strata-accent);
+  --green: var(--strata-healthy);
+  --amber: var(--strata-warning);
+  --violet: var(--strata-ai);
+  --red: var(--strata-critical);
+  --line: var(--strata-border);
+  --line-strong: var(--strata-border-strong);
+  --font: var(--strata-font-ui);
+  --display: var(--strata-font-display);
+  --mono: var(--strata-font-mono);
+  --ease: var(--strata-ease);
   --radius: 20px;
 }
 
@@ -1279,6 +1302,8 @@ h2 {
   box-shadow: 0 40px 90px -50px rgba(0, 0, 0, .9);
   overflow: hidden;
 }
+
+.code-tablist { display: flex; align-items: center; gap: 2px; }
 
 .code-tabs {
   display: flex;

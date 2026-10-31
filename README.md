@@ -10,7 +10,7 @@
 
 Landing page for the Strata distributed infrastructure platform — an open-source
 project built and maintained in the open by one developer. Covers MonoFS,
-Guardian, Doctor, Agent, LB-Edge, and more.
+Guardian, Doctor, Agent, Nightwatch, LB-Edge, and more.
 
 ## Quick Start
 

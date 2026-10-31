@@ -4,25 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Strata — open-source infrastructure, one surface</title>
-<meta name="description" content="Strata is an open-source, self-hosted infrastructure stack: MonoFS, Guardian, Doctor, and Agent. Apache-2.0, developed in the open.">
+<meta name="description" content="Strata is an open-source, self-hosted infrastructure stack: MonoFS, Guardian, Doctor, Agent, and Nightwatch. Apache-2.0, developed in the open.">
 <meta name="theme-color" content="#060a14">
 <link rel="canonical" href="https://stratasre.com/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://stratasre.com/">
 <meta property="og:title" content="Strata — open-source infrastructure, one surface">
-<meta property="og:description" content="MonoFS stores it. Guardian ships it. Doctor sees it. Agent explains it. Open source, self-hosted, Apache-2.0.">
+<meta property="og:description" content="MonoFS stores it. Guardian ships it. Doctor sees it. Agent explains it. Nightwatch watches it. Open source, self-hosted, Apache-2.0.">
 <meta property="og:image" content="https://stratasre.com/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Strata — open-source infrastructure, one surface">
-<meta name="twitter:description" content="MonoFS stores it. Guardian ships it. Doctor sees it. Agent explains it. Open source, self-hosted, Apache-2.0.">
+<meta name="twitter:description" content="MonoFS stores it. Guardian ships it. Doctor sees it. Agent explains it. Nightwatch watches it. Open source, self-hosted, Apache-2.0.">
 <meta name="twitter:image" content="https://stratasre.com/assets/og.png">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/style.css">
 <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
 <script type="application/ld+json">
@@ -50,7 +49,7 @@
 
 <header class="nav" id="nav">
   <div class="nav-inner">
-    <a class="brand" href="#top" aria-label="Strata home">
+    <a class="brand" href="#top">
       <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
         <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
@@ -62,6 +61,7 @@
     <nav class="nav-links" id="navLinks" aria-label="Primary">
       <a href="#platform">Platform</a>
       <a href="#stack">Stack</a>
+      <a href="#nightwatch">Nightwatch</a>
       <a href="#flow">How it flows</a>
       <a href="#code">Primitives</a>
       <a href="#why">Why Strata</a>
@@ -84,16 +84,18 @@
       <div class="hero-copy">
         <p class="eyebrow reveal"><span class="pulse-dot"></span> Strata · open source, self-hosted</p>
         <h1 class="reveal">The whole stack.<br><span class="grad">One surface.</span></h1>
-        <p class="hero-lead reveal">Strata unites <strong>MonoFS</strong>, <strong>Guardian</strong>, <strong>Doctor</strong>, and <strong>Agent</strong> — open-source engines for your source, deployments, telemetry, and assistance. Apache-2.0, self-hosted, and developed in the open.</p>
+        <p class="hero-lead reveal">Strata unites <strong>MonoFS</strong>, <strong>Guardian</strong>, <strong>Doctor</strong>, and <strong>Agent</strong> — open-source engines for your source, deployments, telemetry, and assistance. <strong>Nightwatch</strong> watches alerts in the background, investigates them, and hands you the evidence. Apache-2.0, self-hosted, and developed in the open.</p>
         <div class="hero-actions reveal">
           <a class="btn btn-primary" href="https://github.com/radryc/strata" target="_blank" rel="noopener">Browse the source <span class="btn-arrow" aria-hidden="true">↗</span></a>
-          <a class="btn btn-ghost" href="#flow">See how it flows <span class="btn-arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost" href="https://github.com/radryc/strata#bootstrap" target="_blank" rel="noopener">Quickstart <span class="btn-arrow" aria-hidden="true">↗</span></a>
+          <a class="btn btn-ghost" href="#platform">Architecture <span class="btn-arrow" aria-hidden="true">→</span></a>
         </div>
         <ul class="hero-meta reveal" aria-label="Platform properties">
           <li>Open source</li>
           <li>Apache-2.0</li>
           <li>Self-hosted</li>
           <li>K8s · Docker · AWS</li>
+          <li>Shadow SRE</li>
         </ul>
       </div>
 
@@ -152,6 +154,15 @@
               </div>
               <span class="chip chip-violet">proposed</span>
             </div>
+
+            <div class="console-row" data-tone="amber">
+              <span class="c-icon">◐</span>
+              <div class="c-copy">
+                <b>Nightwatch</b>
+                <span>alert triaged · billing suspected</span>
+              </div>
+              <span class="chip chip-run">shadow</span>
+            </div>
           </div>
           <div class="console-foot">
             <span>commit <code>a91f2c</code></span>
@@ -177,6 +188,9 @@
       <span>Intent-based deploy</span><i></i>
       <span>Unified telemetry</span><i></i>
       <span>Approval-gated actions</span><i></i>
+      <span>Alert triage</span><i></i>
+      <span>Shadow-mode SRE</span><i></i>
+      <span>Escalation handoff</span><i></i>
       <span>Drift detection</span><i></i>
       <span>OCI registry</span><i></i>
       <span>Grafana-compatible</span><i></i>
@@ -186,6 +200,9 @@
       <span>Intent-based deploy</span><i></i>
       <span>Unified telemetry</span><i></i>
       <span>Approval-gated actions</span><i></i>
+      <span>Alert triage</span><i></i>
+      <span>Shadow-mode SRE</span><i></i>
+      <span>Escalation handoff</span><i></i>
       <span>Drift detection</span><i></i>
       <span>OCI registry</span><i></i>
       <span>Grafana-compatible</span><i></i>
@@ -252,6 +269,11 @@
           <span class="point-num">04</span>
           <h3>Safe by construction</h3>
           <p>Desired state is diffed and checked before it is applied. Drift is visible, mutations are attributable.</p>
+        </div>
+        <div class="point reveal">
+          <span class="point-num">05</span>
+          <h3>Alerts become context</h3>
+          <p>Sentinel alerts, deployment events, traces, and topology meet in one incident view, so the first answer is evidence, not a guess.</p>
         </div>
       </div>
     </div>
@@ -336,6 +358,7 @@
             <li>OTLP gRPC and HTTP ingest</li>
             <li>HMAC tokenization before persistence</li>
             <li>Guardian health and topology APIs</li>
+            <li>Sentinel alert rules, acks, silences, and GoAlert delivery</li>
             <li>Prometheus, Loki, and Zipkin out of the box</li>
           </ul>
           <button class="card-link" data-tab-target="doctor" type="button">See the primitive <span aria-hidden="true">→</span></button>
@@ -360,9 +383,91 @@
             <li>Otto for SRE work, Steve for code</li>
             <li>Live tool calls over Guardian, Doctor, MonoFS</li>
             <li>Approval-gated deploys and workspace edits</li>
+            <li>Nightwatch shadow SRE: alerts, evidence, escalation</li>
             <li>Local model, external API, or OpenCode</li>
           </ul>
           <button class="card-link" data-tab-target="agent" type="button">See the primitive <span aria-hidden="true">→</span></button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- NIGHTWATCH -->
+  <section class="section" id="nightwatch">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Nightwatch</p>
+        <h2 class="reveal">The first line.<br><span class="dim">With receipts.</span></h2>
+        <p class="section-lead reveal">Nightwatch is the shadow-mode SRE observer inside Agent. It watches Sentinel alerts, investigates with Doctor, and hands you an evidence-backed incident instead of a noisy page. It never mutates infrastructure.</p>
+      </div>
+
+      <div class="cards">
+        <article class="product-card reveal" data-accent="amber">
+          <div class="card-glow" aria-hidden="true"></div>
+          <header class="card-head">
+            <span class="card-index">01 / Watch</span>
+            <span class="card-arrow" aria-hidden="true">◎</span>
+          </header>
+          <div class="card-icon">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 7c7 0 12 6 15 13-3 7-8 13-15 13S8 27 5 20C8 13 13 7 20 7Z"/>
+              <circle cx="20" cy="20" r="4"/>
+            </svg>
+          </div>
+          <h3>Observe</h3>
+          <p class="card-tag">Per-partition opt-in.</p>
+          <p class="card-body">A single partition label turns Nightwatch on. It polls Sentinel alerts, groups related signals into incidents, and keeps a shift log of what happened while you were away.</p>
+          <ul class="card-list">
+            <li>Per-partition enablement</li>
+            <li>Alert correlation and deduplication</li>
+            <li>Shadow mode by default</li>
+          </ul>
+        </article>
+
+        <article class="product-card reveal" data-accent="blue">
+          <div class="card-glow" aria-hidden="true"></div>
+          <header class="card-head">
+            <span class="card-index">02 / Investigate</span>
+            <span class="card-arrow" aria-hidden="true">⌕</span>
+          </header>
+          <div class="card-icon">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="17" cy="17" r="10"/>
+              <path d="m25 25 9 9"/>
+              <path d="M12 17h10M17 12v10"/>
+            </svg>
+          </div>
+          <h3>Investigate</h3>
+          <p class="card-tag">Metrics, traces, topology, events.</p>
+          <p class="card-body">Nightwatch builds an evidence pack from Doctor and Guardian: recent deploys, service topology, trace edges, log patterns, and fleet metric anomalies. The LLM explains the evidence; it does not invent it.</p>
+          <ul class="card-list">
+            <li>Cross-partition candidate detection</li>
+            <li>Evidence with query and result hash</li>
+            <li>Confidence and escalation thresholds</li>
+          </ul>
+        </article>
+
+        <article class="product-card reveal" data-accent="violet">
+          <div class="card-glow" aria-hidden="true"></div>
+          <header class="card-head">
+            <span class="card-index">03 / Hand off</span>
+            <span class="card-arrow" aria-hidden="true">→</span>
+          </header>
+          <div class="card-icon">
+            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 20h18"/>
+              <path d="m20 14 6 6-6 6"/>
+              <path d="M31 8v24"/>
+            </svg>
+          </div>
+          <h3>Hand off</h3>
+          <p class="card-tag">Read globally. Act locally.</p>
+          <p class="card-body">If the root cause is outside the assigned partition, Nightwatch creates a cross-partition finding and hands it to the owning team. Low confidence, missing evidence, or a failed investigation becomes an escalation recommendation.</p>
+          <ul class="card-list">
+            <li>Handoff-only across partitions</li>
+            <li>Escalation when confidence is low</li>
+            <li>Timeline and activity ledger</li>
+          </ul>
         </article>
       </div>
     </div>
@@ -414,6 +519,15 @@
             <span class="time-tech">Agent</span>
           </div>
         </li>
+        <li class="timeline-item reveal">
+          <div class="time-marker">05</div>
+          <div class="time-body">
+            <span class="time-tag">Watch</span>
+            <h3>Let Nightwatch take the first pass</h3>
+            <p>Alerts arrive, Nightwatch correlates them with deploys and telemetry, and hands over a readable incident with evidence, confidence, and an escalation when it cannot be sure.</p>
+            <span class="time-tech">Nightwatch</span>
+          </div>
+        </li>
       </ol>
       <div class="loop-note reveal"><span aria-hidden="true">↺</span> And the loop keeps closing.</div>
     </div>
@@ -435,11 +549,13 @@
       </div>
 
       <div class="code-panel reveal">
-        <div class="code-tabs" role="tablist" aria-label="Primitive examples">
-          <button class="code-tab is-active" id="tab-monofs" role="tab" aria-selected="true" aria-controls="panel-monofs" data-tab="monofs" type="button">MonoFS</button>
-          <button class="code-tab" id="tab-guardian" role="tab" aria-selected="false" aria-controls="panel-guardian" data-tab="guardian" type="button">Guardian</button>
-          <button class="code-tab" id="tab-doctor" role="tab" aria-selected="false" aria-controls="panel-doctor" data-tab="doctor" type="button">Doctor</button>
-          <button class="code-tab" id="tab-agent" role="tab" aria-selected="false" aria-controls="panel-agent" data-tab="agent" type="button">Agent</button>
+        <div class="code-tabs">
+          <div class="code-tablist" role="tablist" aria-label="Primitive examples">
+            <button class="code-tab is-active" id="tab-monofs" role="tab" aria-selected="true" aria-controls="panel-monofs" data-tab="monofs" type="button">MonoFS</button>
+            <button class="code-tab" id="tab-guardian" role="tab" aria-selected="false" aria-controls="panel-guardian" data-tab="guardian" type="button">Guardian</button>
+            <button class="code-tab" id="tab-doctor" role="tab" aria-selected="false" aria-controls="panel-doctor" data-tab="doctor" type="button">Doctor</button>
+            <button class="code-tab" id="tab-agent" role="tab" aria-selected="false" aria-controls="panel-agent" data-tab="agent" type="button">Agent</button>
+          </div>
           <button class="copy-btn" id="copyBtn" type="button" aria-label="Copy code">Copy</button>
         </div>
 
@@ -578,7 +694,7 @@
 <footer class="footer">
   <div class="wrap footer-grid">
     <div class="footer-brand">
-      <a class="brand" href="#top" aria-label="Strata home">
+      <a class="brand" href="#top">
         <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
         <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
@@ -593,6 +709,7 @@
         <span class="footer-head">Product</span>
         <a href="#platform">Platform</a>
         <a href="#stack">MonoFS · Guardian · Doctor · Agent</a>
+        <a href="#nightwatch">Nightwatch</a>
         <a href="#flow">How it flows</a>
         <a href="#why">Why Strata</a>
       </div>
