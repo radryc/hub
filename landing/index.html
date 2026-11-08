@@ -8,7 +8,7 @@
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta name="author" content="radryc">
-<meta name="keywords" content="Strata, open source infrastructure, self-hosted platform, MonoFS, Guardian, Doctor, LB-Edge, Agent, Nightwatch, OTLP, observability, GitOps, Kubernetes, GCP, AWS, on-prem Kubernetes, ClickHouse, Apache-2.0">
+<meta name="keywords" content="Strata, open source infrastructure, self-hosted platform, MonoFS, Guardian, Doctor, LB-Edge, Agent, Nightwatch, OTLP, observability, GitOps, Kubernetes, GCP, AWS, on-prem Kubernetes, pluggable span store, Apache-2.0">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060a14">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f1ea">
 <link rel="canonical" href="https://stratasre.com/">
@@ -87,7 +87,7 @@
       "dateModified": "2026-11-08",
       "author": { "@id": "https://stratasre.com/#person" },
       "maintainer": { "@id": "https://stratasre.com/#person" },
-      "keywords": "open source infrastructure, self-hosted platform, MonoFS, Guardian, Doctor, LB-Edge, Agent, Nightwatch, OTLP, observability, GitOps, GCP, AWS, on-prem Kubernetes, ClickHouse"
+      "keywords": "open source infrastructure, self-hosted platform, MonoFS, Guardian, Doctor, LB-Edge, Agent, Nightwatch, OTLP, observability, GitOps, GCP, AWS, on-prem Kubernetes, pluggable span store"
     },
     {
       "@type": "Person",
@@ -169,7 +169,7 @@
           "name": "Does Strata work with GCP, AWS, and on-prem Kubernetes?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Guardian ships native pushers for GCP, AWS, Kubernetes (including on-prem), Docker, and local targets. The same partitions, intents, and assets apply; only the pusher and credentials change. The bootstrap script supports a local kind cluster, an existing Kubernetes cluster, and AWS. GCP uses guardianctl gcp setup to verify prerequisites and prepare the native pusher."
+            "text": "Yes. Guardian ships native pushers for GCP, AWS, Kubernetes (including on-prem), Docker, and a local server. The same partitions, intents, and assets apply; only the pusher and credentials change. The bootstrap script supports a local kind cluster, an existing Kubernetes cluster, and AWS. GCP uses guardianctl gcp setup to verify prerequisites and prepare the native pusher."
           }
         },
         {
@@ -300,7 +300,7 @@
             </article>
             <article class="stratum" data-tone="cyan" style="--d:3">
               <header><span class="stratum-plane">Deploy</span><span class="stratum-live">applying</span></header>
-              <div class="stratum-main"><span class="stratum-name">Guardian</span><span class="stratum-chip">DIFF → APPLY</span></div>
+              <div class="stratum-main"><span class="stratum-name">Guardian</span><span class="stratum-chip">in sync</span></div>
               <p>production · dependents resolved</p>
               <div class="stratum-meter"><i style="--w:52%"></i></div>
             </article>
@@ -335,7 +335,7 @@
         <p class="answer-lead"><strong>Strata is an open-source, self-hosted infrastructure platform.</strong> Five engines — <strong>MonoFS</strong>, <strong>Guardian</strong>, <strong>Doctor</strong>, <strong>LB-Edge</strong>, and <strong>Agent</strong> — run on one storage fabric, so source code, deployments, traffic, telemetry, and assistance keep the same context.</p>
         <dl class="answer-facts">
           <div><dt>License</dt><dd>Apache-2.0</dd></div>
-          <div><dt>Runs on</dt><dd>GCP · AWS · on-prem Kubernetes · Docker · local</dd></div>
+          <div><dt>Runs on</dt><dd>GCP · AWS · on-prem Kubernetes · Docker · local server</dd></div>
           <div><dt>Interfaces</dt><dd>OTLP · OCI · Prometheus · Loki · Tempo</dd></div>
           <div><dt>Start with</dt><dd><code>./scripts/bootstrap.sh up</code></dd></div>
         </dl>
@@ -353,7 +353,7 @@
       <span>OTLP native</span><i></i>
       <span>HMAC privacy</span><i></i>
       <span>SQL over telemetry</span><i></i>
-      <span>ClickHouse span engine</span><i></i>
+      <span>Pluggable span store</span><i></i>
       <span>Synthetic journeys</span><i></i>
       <span>Approval-gated actions</span><i></i>
       <span>Shadow-mode SRE</span><i></i>
@@ -365,7 +365,7 @@
       <span>OTLP native</span><i></i>
       <span>HMAC privacy</span><i></i>
       <span>SQL over telemetry</span><i></i>
-      <span>ClickHouse span engine</span><i></i>
+      <span>Pluggable span store</span><i></i>
       <span>Synthetic journeys</span><i></i>
       <span>Approval-gated actions</span><i></i>
       <span>Shadow-mode SRE</span><i></i>
@@ -461,7 +461,7 @@
             <p class="layer-tagline">Every signal. One story.</p>
             <p>Doctor is a privacy-first OpenTelemetry backend that stores traces, logs, and metrics together. A SQL console, dashboard bundles, firing alerts, Guardian deployment context, and Grafana-compatible APIs sit on the same query surface.</p>
             <ul class="layer-chips">
-              <li>OTLP gRPC + HTTP</li><li>HMAC tokenization</li><li>SQL console</li><li>Prometheus · Loki · Tempo</li><li>ClickHouse or local Parquet</li>
+              <li>OTLP gRPC + HTTP</li><li>HMAC tokenization</li><li>SQL console</li><li>Prometheus · Loki · Tempo</li><li>Pluggable span store</li>
             </ul>
             <a class="layer-link" href="https://github.com/radryc/doctor" target="_blank" rel="noopener">Read the Doctor source <span aria-hidden="true">↗</span></a>
           </div>
@@ -479,9 +479,9 @@
           <div class="layer-copy">
             <div class="layer-title"><h3>Guardian</h3><span class="layer-tag">Control plane</span></div>
             <p class="layer-tagline">Declare it. Guardian lands it.</p>
-            <p>Guardian is an intent-based control plane that compiles desired state into a dependency graph, detects drift, and applies the delta across GCP, AWS, on-prem Kubernetes, Docker, or local targets. Synthetic journeys and OTLP histograms make the rollout observable.</p>
+            <p>Guardian is an intent-based control plane that compiles desired state into a dependency graph, detects drift, and applies the delta across GCP, AWS, on-prem Kubernetes, Docker, or a local server. Synthetic journeys and OTLP histograms make the rollout observable.</p>
             <ul class="layer-chips">
-              <li>Partitions, intents, assets</li><li>DIFF → CHECK → APPLY</li><li>GCP · AWS · on-prem K8s</li><li>Docker · local</li><li>Probe journeys</li><li>Full audit trail</li>
+              <li>Partitions, intents, assets</li><li>Keeps production in sync</li><li>GCP · AWS · on-prem K8s</li><li>Docker · local server</li><li>Probe journeys</li><li>Full audit trail</li>
             </ul>
             <a class="layer-link" href="https://github.com/radryc/guardian" target="_blank" rel="noopener">Read the Guardian source <span aria-hidden="true">↗</span></a>
           </div>
@@ -501,7 +501,7 @@
             <p class="layer-tagline">One workspace. Every repo. All the bytes.</p>
             <p>MonoFS is a distributed filesystem that mounts thousands of independent repositories as one writable virtual monorepo. The same durable substrate holds the platform's source, OCI images, desired state, and telemetry chunks — with search, encryption, and replication built in.</p>
             <ul class="layer-chips">
-              <li>FUSE writable overlay</li><li>Explicit session commit</li><li>OCI registry + code search</li><li>HRW-sharded + encrypted</li><li>Logengine + span engine</li>
+              <li>FUSE writable overlay</li><li>Explicit session commit</li><li>OCI registry + code search</li><li>HRW-sharded + encrypted</li><li>Logengine + span store</li>
             </ul>
             <a class="layer-link" href="https://github.com/radryc/monofs" target="_blank" rel="noopener">Read the MonoFS source <span aria-hidden="true">↗</span></a>
           </div>
@@ -712,14 +712,14 @@
           <div class="change-date"><time datetime="2026-11-08">08 Nov</time><span>Guardian</span></div>
           <div class="change-body">
             <h3>Native on GCP, AWS, and on-prem Kubernetes.</h3>
-            <p>Guardian now targets <strong>GCP</strong> with a first-class OpenTofu pusher, alongside its existing <strong>AWS</strong> and <strong>on-prem Kubernetes</strong> pushers. The same partitions, intents, and assets apply; only the pusher and credentials change. Docker and local targets stay for development.</p>
+            <p>Guardian now targets <strong>GCP</strong> with a first-class OpenTofu pusher, alongside its existing <strong>AWS</strong> and <strong>on-prem Kubernetes</strong> pushers. The same partitions, intents, and assets apply; only the pusher and credentials change. Docker and local server targets stay for development.</p>
           </div>
         </li>
         <li class="change reveal">
           <div class="change-date"><time datetime="2026-11-06">06 Nov</time><span>MonoFS · Doctor</span></div>
           <div class="change-body">
-            <h3>The span engine is now a choice.</h3>
-            <p>Logs, metrics, and traces can move to <strong>ClickHouse</strong> with <code>--spanengine=clickhouse</code>. Local Parquet chunks stay the default, and the Doctor and Grafana APIs do not change. Partition-aware chunks, scatter-gather aggregation, query budgets, and retention are in.</p>
+            <h3>The span store is now a choice.</h3>
+            <p>Logs, metrics, and traces can move to a <strong>pluggable span store</strong>. The local default remains available, and the Doctor and Grafana APIs do not change. Partition-aware chunks, scatter-gather aggregation, query budgets, and retention are in.</p>
           </div>
         </li>
         <li class="change reveal">
@@ -885,32 +885,32 @@
         <div class="compare-row" role="row">
           <span role="cell">Source</span>
           <span role="cell">Git + partial clone + separate artifact store</span>
-          <span role="cell">One virtual monorepo, OCI registry, and search on the same fabric</span>
+          <span role="cell"><strong>MonoFS</strong> — one virtual monorepo, OCI registry, and search on the same fabric</span>
         </div>
         <div class="compare-row" role="row">
           <span role="cell">Deploy</span>
           <span role="cell">Helm + Argo + scripts with ordering in your head</span>
-          <span role="cell">Typed intents, a dependency graph, and DIFF → CHECK → APPLY</span>
+          <span role="cell"><strong>Guardian</strong> — typed intents and a dependency graph. That's it: Guardian owns the rollout and keeps production in sync.</span>
         </div>
         <div class="compare-row" role="row">
           <span role="cell">Traffic</span>
           <span role="cell">Hand-maintained LB config and stale routes</span>
-          <span role="cell">A registry that follows Kubernetes Endpoints and drains safely</span>
+          <span role="cell"><strong>LB-Edge</strong> — a registry that follows Kubernetes Endpoints and drains safely</span>
         </div>
         <div class="compare-row" role="row">
           <span role="cell">Telemetry</span>
           <span role="cell">Prometheus + Loki + Tempo + a bucket, stitched together</span>
-          <span role="cell">OTLP in, privacy first, one query surface, Grafana-compatible</span>
+          <span role="cell"><strong>Doctor</strong> — OTLP in, privacy first, one query surface, Grafana-compatible</span>
         </div>
         <div class="compare-row" role="row">
           <span role="cell">Assistance</span>
           <span role="cell">A generic chat tab that cannot see your platform</span>
-          <span role="cell">Live tool calls, approval gates, and a shadow SRE with evidence</span>
+          <span role="cell"><strong>Agent</strong> — live tool calls, approval gates, and a shadow SRE with evidence</span>
         </div>
         <div class="compare-row" role="row">
           <span role="cell">Truth</span>
           <span role="cell">Five copies, reconciled by a person at 03:00</span>
-          <span role="cell">One fabric, one audit trail, one place to look</span>
+          <span role="cell"><strong>Strata</strong> — one fabric, one audit trail, one place to look</span>
         </div>
       </div>
 
@@ -939,13 +939,13 @@
         <article class="bento-card reveal">
           <span class="bento-kicker">Open interfaces</span>
           <h3>Bring your own everything.</h3>
-          <p>OTLP collectors, Grafana dashboards, OCI images, S3 or GCS upstreams, ClickHouse or local Parquet. Strata fits the stack you have.</p>
+          <p>OTLP collectors, Grafana dashboards, OCI images, S3 or GCS upstreams, and a pluggable span store. Strata fits the stack you have.</p>
         </article>
         <article class="bento-card bento-wide reveal">
           <span class="bento-kicker">Runs where you do</span>
           <h3>Self-hosted on GCP, AWS, or your own metal.</h3>
-          <p>Native pushers for GCP, AWS, and on-prem Kubernetes, plus Docker and local targets for development. Same intent model, same telemetry surface, same audit trail — wherever the work lands.</p>
-          <div class="run-grid" aria-hidden="true"><span>gcp</span><span>aws</span><span>on-prem k8s</span><span>docker</span><span>local</span></div>
+          <p>Native pushers for GCP, AWS, and on-prem Kubernetes, plus Docker and a local server for development. Same intent model, same telemetry surface, same audit trail — wherever the work lands.</p>
+          <div class="run-grid" aria-hidden="true"><span>gcp</span><span>aws</span><span>on-prem k8s</span><span>docker</span><span>local server</span></div>
         </article>
       </div>
 
@@ -1035,7 +1035,7 @@ cd strata
         </article>
         <article class="faq-item reveal">
           <h3>Does Strata work with GCP, AWS, and on-prem Kubernetes?</h3>
-          <p>Yes. Guardian ships native pushers for GCP, AWS, Kubernetes (including on-prem), Docker, and local targets. The same partitions, intents, and assets apply; only the pusher and credentials change. The bootstrap script supports a local kind cluster, an existing Kubernetes cluster, and AWS; GCP uses <code>guardianctl gcp setup</code> to verify prerequisites and prepare the native pusher.</p>
+          <p>Yes. Guardian ships native pushers for GCP, AWS, Kubernetes (including on-prem), Docker, and a local server. The same partitions, intents, and assets apply; only the pusher and credentials change. The bootstrap script supports a local kind cluster, an existing Kubernetes cluster, and AWS; GCP uses <code>guardianctl gcp setup</code> to verify prerequisites and prepare the native pusher.</p>
         </article>
         <article class="faq-item reveal">
           <h3>How does Strata keep telemetry private?</h3>
