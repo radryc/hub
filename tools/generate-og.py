@@ -113,22 +113,22 @@ def build_og() -> Image.Image:
     tracked(d, (118, 54), "STRATA", f_kicker, INK, 4)
     tracked(d, (118, 78), "/ OSS", f_tiny, MUTED, 2)
 
-    f_title = ImageFont.truetype(BOLD, 88)
-    d.text((78, 196), "The whole stack.", font=f_title, fill=INK)
-    gradient_text(img, (78, 308), "One surface.", f_title, (125, 211, 240), (139, 124, 246))
+    f_title = ImageFont.truetype(BOLD, 84)
+    d.text((78, 196), "Infrastructure", font=f_title, fill=INK)
+    gradient_text(img, (78, 304), "that remembers.", f_title, (125, 211, 240), (139, 124, 246))
 
     d = ImageDraw.Draw(img)
-    f_sub = ImageFont.truetype(REG, 28)
-    d.text((80, 424), "MonoFS stores it. Guardian ships it. Doctor sees it. Agent answers it.", font=f_sub, fill=MUTED)
+    f_sub = ImageFont.truetype(REG, 26)
+    d.text((80, 420), "Source, deployments, traffic, telemetry, and answers share one memory.", font=f_sub, fill=MUTED)
 
-    f_note = ImageFont.truetype(MONO, 18)
-    tracked(d, (80, 466), "OPEN SOURCE · SELF-HOSTED · BUILT BY @RADRYC", f_note, FAINT, 1)
+    f_note = ImageFont.truetype(MONO, 17)
+    tracked(d, (80, 462), "OPEN SOURCE · APACHE-2.0 · GCP · AWS · ON-PREM K8S", f_note, FAINT, 1)
 
     d.line([(80, 506), (1120, 506)], fill=(255, 255, 255, 30), width=1)
     f_small = ImageFont.truetype(MONO, 15)
     tracked(d, (80, 534), "STRATASRE.COM", f_small, CYAN, 2)
 
-    chips = (("MONOFS", GREEN), ("GUARDIAN", CYAN), ("DOCTOR", AMBER), ("AGENT", VIOLET))
+    chips = (("MONOFS", GREEN), ("GUARDIAN", CYAN), ("DOCTOR", AMBER), ("LB-EDGE", CYAN), ("AGENT", VIOLET))
     widths = [d.textlength(label, font=f_tiny) + 26 for label, _ in chips]
     x = 1120 - (sum(widths) + 9 * (len(chips) - 1))
     for (label, color), width in zip(chips, widths):

@@ -1,15 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="midnight">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Not found — Strata</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#060a14">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060a14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f1ea">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
 <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script src="assets/theme.js"></script>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -25,9 +27,9 @@
       <span class="brand-sub">/ OSS</span>
     </a>
     <nav class="nav-links" aria-label="Primary">
-      <a href="/#platform">Platform</a>
-      <a href="/#stack">Stack</a>
+      <a href="/#stack">The stack</a>
       <a href="/#flow">How it flows</a>
+      <a href="/#changelog">What changed</a>
       <a href="/#code">Primitives</a>
     </nav>
   </div>
@@ -47,7 +49,7 @@
 <footer class="footer">
   <div class="wrap footer-bottom">
     <span>© <span id="year">2026</span> Strata · open source.</span>
-    <span class="footer-status"><i></i> MonoFS · Guardian · Doctor</span>
+    <span class="footer-status"><i></i> MonoFS · Guardian · Doctor · LB-Edge · Agent</span>
   </div>
 </footer>
 <script src="assets/app.js" defer></script>

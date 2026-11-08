@@ -1,3 +1,10 @@
 # Cloudflare Pages _redirects only matches paths, not hostnames.
 # The canonical-host redirect (www.stratasre.com -> stratasre.com) is a
 # zone-level Cloudflare Redirect Rule, configured outside this repo.
+
+# The legacy Hugo site had these sections. Send old links to the new landing.
+/posts/*    /  301
+/tools/*    /  301
+/tags/*     /  301
+/categories/* / 301
+/about/*    /  301
