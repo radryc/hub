@@ -124,6 +124,14 @@ Pages artifact.
   python3 tools/generate-og.py
   ```
 
+## Static asset versioning
+
+`_headers` caches `/assets/*` for one year with `immutable`. When you change
+`style.css`, `app.js`, `theme.js`, or `tokens.css`, bump the `?v=` query in
+`landing/index.html` and `landing/404.html` (and the `@import` in
+`style.css`). `index.html` itself is served with `must-revalidate`, so a cached
+HTML shell will pick up the new asset URLs immediately.
+
 ### If you edit the JSON-LD block
 
 `landing/_headers` uses a CSP hash for the inline `application/ld+json` script.

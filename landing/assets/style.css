@@ -2,7 +2,7 @@
    A single-page surface for MonoFS, Guardian, Doctor, LB-Edge, and Agent.
    Design: layered strata, kinetic type, one shared palette. No dependencies. */
 
-@import url("tokens.css");
+@import url("tokens.css?v=2026-11-08b");
 
 @font-face {
   font-family: "Manrope";
