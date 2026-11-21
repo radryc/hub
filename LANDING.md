@@ -26,6 +26,8 @@ landing/
 │   ├── theme.js          # applies the saved light/dark theme before paint
 │   ├── app.js            # nav, reveals, tabs, copy, tilt, spotlight
 │   ├── favicon.svg       # Strata hexagon mark
+│   ├── icon-180.png      # Apple touch icon
+│   ├── fonts/            # self-hosted Manrope/Space Grotesk/JetBrains Mono
 │   └── og.png            # 1200×630 social card
 ├── _headers              # security + cache headers (Pages)
 ├── _redirects            # path redirects (host redirect is a zone rule)
@@ -33,8 +35,8 @@ landing/
 └── sitemap.xml
 ```
 
-`wrangler.toml` at the repo root points at `landing/` so direct deployments can
-run from `hub/`.
+`wrangler.toml` at the `hub/` root points at `landing/` so direct deployments
+can run from `hub/`.
 
 ### Hugo is only a build wrapper
 

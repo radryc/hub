@@ -25,4 +25,6 @@ Strata is a self-hosted distributed infrastructure platform built from the groun
 
 ## Repository
 
-All components live in a monorepo under `github.com/your-org/strata`. The Guardian control plane orchestrates everything via `start.sh` or `guardianctl`.
+The components are developed in the open under `github.com/radryc`, with
+`github.com/radryc/strata` as the umbrella repository. The Guardian control
+plane orchestrates everything via `start.sh` or `guardianctl`.

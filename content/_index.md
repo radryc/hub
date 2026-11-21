@@ -19,7 +19,7 @@ Strata is a self-hosted distributed infrastructure platform. Every component wor
 | **[Packager](/tools/#packager)** | Encrypted archive library — ChaCha20-Poly1305, S3/GCS backends, WORM immutability |
 | **[CFG](/tools/#cfg)** | Configuration library — versioned hot/cold tier storage, encryption-at-rest |
 | **[Commit-All](/tools/#commit-all)** | AI commit message CLI — zero-dependency, Ollama LLM, dry-run mode |
-| **[Stratatools](/tools/#stratatools)** | Platform toolkit — K8s bootstrap manifests, partition configs, Python image utilities |
+| **[Stratatools](/tools/#stratatools)** | Platform toolkit — K8s bootstrap manifests and partition configs, plus a minimal Python CLI stub |
 
 ## Architecture
 
@@ -48,7 +48,7 @@ Strata is a self-hosted distributed infrastructure platform. Every component wor
 
 ```bash
 # Clone and setup
-git clone https://github.com/your-org/strata.git && cd strata
+git clone https://github.com/radryc/strata.git && cd strata
 
 # Start the full platform
 ./start.sh
@@ -58,8 +58,8 @@ Access points after startup:
 
 | Service | URL |
 |---------|-----|
-| Guardian UI | `http://localhost:18090` |
-| Container Registry | `http://localhost:5000` |
+| Guardian UI | `http://localhost:8090` |
+| Container Registry | `registry.strata.local:5000` (in-cluster) |
 | MonoFS HTTP | `http://localhost:8080` |
 | MonoFS gRPC | `localhost:9090` |
 
