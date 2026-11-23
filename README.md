@@ -4,20 +4,26 @@
 > the umbrella repository — the front door, component map, and bootstrap notes
 > for the whole project.
 
-Landing page for the Strata distributed infrastructure platform — an open-source
-project built and maintained in the open by one developer. Covers MonoFS,
-Guardian, Doctor, LB-Edge, Agent, and Nightwatch, with native support for GCP,
-AWS, and on-prem Kubernetes. The page includes a short answer, a five-engine
-stack tour, release notes, primitives, and an FAQ.
+Engineering hub for the Strata open-source infrastructure platform — 13
+public repositories and 5 connected planes built and maintained in the open by `@radryc`. Covers
+MonoFS, Guardian, Doctor, LB-Edge, Agent (including shadow-mode Nightwatch),
+`sqlagregator`, `kvs`, `packager`, `cfg`, `tlsx`, `aws`, and `k8s-top`, with native support for GCP, AWS, and on-prem
+Kubernetes.
 
-The static site in [`landing/`](landing/) is the **single source of truth**.
+The static site in [`landing/`](landing/) is the **single source of truth**:
+
+- `/` (`landing/index.html`) — Overview, measured proof bar, 5 planes, interactive flow, Nightwatch, engineering log, primitives, and FAQ
+- `/architecture/` (`landing/architecture/index.html`) — System topology SVG, six core bets, durability & state ownership, wire ports, failure playbook, and candid boundaries
+- `/systems/` (`landing/systems/index.html`) — Filterable 13-repository directory, language distribution, and subsystem deep dives
+- `/benchmarks/` (`landing/benchmarks/index.html`) — Measured throughput & latency matrix, `kind-strata` soak/failover results, 150k-target chaos budgets, and standalone `nzip` R&D ablations
+- `/security/` (`landing/security/index.html`) — Pre-WAL privacy funnel, `tlsx` SPIFFE mTLS, ChaCha20/AES-256-GCM encryption, compiled RBAC, SSRF `netguard`, and hash-chained ledgers
+
 Hugo is kept only as a build wrapper for hosts that expect a Hugo project; it
-copies `landing/` into `public/` verbatim. There is no separate Hugo theme or
-content design anymore.
+copies `landing/` into `public/` verbatim.
 
 ## Quick Start
 
-Preview the static page directly:
+Preview the static site directly from `landing/` so root-relative `/assets/*` and subpage routes resolve cleanly:
 
 ```bash
 cd landing
@@ -39,14 +45,14 @@ hugo --minify
 ```
 
 Output goes to `public/`. HTML minification is disabled in `hugo.toml` because
-the page carries a CSP hash for its inline JSON-LD.
+the pages carry SHA-256 CSP hashes for their inline JSON-LD blocks.
 
 ## Deploy
 
-Both domains serve the same static page:
+Both domains serve the same static site:
 
 - `stratasre.com` — canonical host
-- `sretoolhub.com` — same page; canonical remains `stratasre.com`
+- `sretoolhub.com` — same site; canonical remains `stratasre.com`
 
 For Cloudflare Pages, see [`LANDING.md`](LANDING.md). The project is
 `stratasre` and the output directory is `landing/`.

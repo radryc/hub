@@ -20,6 +20,7 @@ FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
 BOLD = FONT_DIR / "DejaVuSans-Bold.ttf"
 REG = FONT_DIR / "DejaVuSans.ttf"
 MONO = FONT_DIR / "DejaVuSansMono.ttf"
+MONO_BOLD = FONT_DIR / "DejaVuSansMono-Bold.ttf"
 
 BG = "#060a14"
 INK = "#e5ecf4"
@@ -27,7 +28,6 @@ MUTED = "#9bb0cf"
 FAINT = "#7d8fa6"
 CYAN = "#00ade4"
 CYAN_LIGHT = "#7dd3f0"
-CYAN_DARK = "#0091bf"
 GREEN = "#00c369"
 AMBER = "#fcb519"
 VIOLET = "#8b7cf6"
@@ -47,10 +47,8 @@ def hexagon(draw: ImageDraw.ImageDraw, cx: float, cy: float, r: float, color, wi
         angle = math.radians(60 * i - 90)
         points.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
     draw.line(points + [points[0]], fill=color, width=width, joint="curve")
-    top = points[0]
     left = points[4]
     right = points[5]
-    mid = (cx, cy + r * 0.5)
     draw.line([left, (cx, cy), right], fill=color, width=width)
     draw.line([(cx, cy), (cx, cy + r)], fill=color, width=width)
     return points
@@ -77,7 +75,7 @@ def build_og() -> Image.Image:
 
     glow = Image.new("RGB", (W, H), BG)
     gd = ImageDraw.Draw(glow)
-    gd.ellipse((720, -340, 1500, 440), fill=(0, 44, 68))
+    gd.ellipse((700, -340, 1500, 440), fill=(0, 44, 68))
     gd.ellipse((-300, 320, 460, 1020), fill=(0, 32, 26))
     gd.ellipse((380, 420, 1200, 1000), fill=(22, 18, 52))
     glow = glow.filter(ImageFilter.GaussianBlur(160))
@@ -108,33 +106,44 @@ def build_og() -> Image.Image:
     d = ImageDraw.Draw(img)
     hexagon(d, 84, 68, 20, (0, 173, 228), 2)
 
-    f_kicker = ImageFont.truetype(MONO, 17)
-    f_tiny = ImageFont.truetype(MONO, 13)
-    tracked(d, (118, 54), "STRATA", f_kicker, INK, 4)
-    tracked(d, (118, 78), "/ OSS", f_tiny, MUTED, 2)
+    f_kicker = ImageFont.truetype(str(MONO_BOLD if MONO_BOLD.exists() else MONO), 16)
+    f_tiny = ImageFont.truetype(str(MONO), 12)
+    tracked(d, (118, 53), "STRATA", f_kicker, INK, 4)
+    tracked(d, (118, 76), "/ OSS · APACHE-2.0", f_tiny, MUTED, 2)
 
-    f_title = ImageFont.truetype(BOLD, 84)
-    d.text((78, 196), "Infrastructure", font=f_title, fill=INK)
-    gradient_text(img, (78, 304), "that remembers.", f_title, (125, 211, 240), (139, 124, 246))
+    f_title = ImageFont.truetype(str(BOLD), 68)
+    d.text((78, 160), "Infrastructure", font=f_title, fill=INK)
+    gradient_text(img, (78, 246), "engineered from scratch.", f_title, (125, 211, 240), (139, 124, 246))
 
     d = ImageDraw.Draw(img)
-    f_sub = ImageFont.truetype(REG, 26)
-    d.text((80, 420), "Source, deployments, traffic, telemetry, and answers share one memory.", font=f_sub, fill=MUTED)
+    f_sub = ImageFont.truetype(str(REG), 24)
+    d.text(
+        (80, 352),
+        "13 Public Repos · 5 Connected Planes · 734 Test Files · Go / TS / Python / C",
+        font=f_sub,
+        fill=MUTED,
+    )
 
-    f_note = ImageFont.truetype(MONO, 17)
-    tracked(d, (80, 462), "OPEN SOURCE · APACHE-2.0 · GCP · AWS · ON-PREM K8S", f_note, FAINT, 1)
+    f_pill = ImageFont.truetype(str(MONO_BOLD if MONO_BOLD.exists() else MONO), 13)
+    pills = (
+        ("MONOFS 15.1K OPS/S", GREEN),
+        ("GUARDIAN ZERO-DB", CYAN),
+        ("DOCTOR 150K FED", AMBER),
+        ("SQLAGREGATOR", CYAN_LIGHT),
+        ("LB-EDGE 14.3K/S", VIOLET),
+    )
+    px = 80
+    py = 418
+    for label, color in pills:
+        w_box = d.textlength(label, font=f_pill) + 28
+        d.rounded_rectangle((px, py, px + w_box, py + 36), radius=18, fill=(13, 18, 32), outline=(45, 58, 82), width=1)
+        d.text((px + 14, py + 10), label, font=f_pill, fill=color)
+        px += w_box + 10
 
-    d.line([(80, 506), (1120, 506)], fill=(255, 255, 255, 30), width=1)
-    f_small = ImageFont.truetype(MONO, 15)
-    tracked(d, (80, 534), "STRATASRE.COM", f_small, CYAN, 2)
-
-    chips = (("MONOFS", GREEN), ("GUARDIAN", CYAN), ("DOCTOR", AMBER), ("LB-EDGE", CYAN), ("AGENT", VIOLET))
-    widths = [d.textlength(label, font=f_tiny) + 26 for label, _ in chips]
-    x = 1120 - (sum(widths) + 9 * (len(chips) - 1))
-    for (label, color), width in zip(chips, widths):
-        d.rounded_rectangle((x, 528, x + width, 558), radius=15, outline=(255, 255, 255, 42), width=1)
-        d.text((x + 13, 535), label, font=f_tiny, fill=color)
-        x += width + 9
+    d.line([(80, 502), (1120, 502)], fill=(38, 50, 72), width=1)
+    f_small = ImageFont.truetype(str(MONO_BOLD if MONO_BOLD.exists() else MONO), 15)
+    tracked(d, (80, 530), "STRATASRE.COM · GITHUB.COM/RADRYC/STRATA", f_small, CYAN, 2)
+    tracked(d, (925, 532), "BUILT BY @RADRYC", f_tiny, FAINT, 2)
 
     for x1, y1, x2, y2 in (
         (40, 40, 40, 70),

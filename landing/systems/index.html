@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 Repositories &amp; Systems — Strata</title>
+<meta name="description" content="Explore all 13 public Apache-2.0 Strata repositories (734 test suites) across Go, TypeScript, Python, Protobuf, and C — plus byte layouts and state machines.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="author" content="radryc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060a14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6fa">
+<link rel="canonical" href="https://stratasre.com/systems/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Strata">
+<meta property="og:url" content="https://stratasre.com/systems/">
+<meta property="og:title" content="13 Repositories &amp; Systems — Strata">
+<meta property="og:description" content="Filterable directory of all 13 public engineering repos plus deep dives into MonoFS, Guardian, Doctor, LB-Edge, Agent, sqlagregator, kvs, packager, cfg, and tlsx.">
+<meta property="og:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="13 Repositories &amp; Systems — Strata">
+<meta name="twitter:description" content="13 public Apache-2.0 repositories and 734 test suites across 5 connected planes built by @radryc.">
+<meta name="twitter:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/assets/theme.js?v=2026-11-23a"></script>
+<link rel="stylesheet" href="/assets/style.css?v=2026-11-23b">
+<noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Strata 13 Public Repositories & Subsystem Deep Dives",
+  "description": "Codebase inventory, language breakdown, state machines, and binary layouts across all 13 public Strata repositories.",
+  "url": "https://stratasre.com/systems/",
+  "dateModified": "2026-11-23",
+  "author": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" },
+  "publisher": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" }
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="Strata home">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+        <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+      </svg>
+      <span class="brand-word">STRATA</span>
+      <span class="brand-sub">/ OSS</span>
+    </a>
+
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="/">Overview</a>
+      <a href="/architecture/">Architecture</a>
+      <a href="/systems/" aria-current="page">Systems</a>
+      <a href="/benchmarks/">Benchmarks</a>
+      <a href="/security/">Security</a>
+      <a href="/#about">About</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <svg class="theme-icon theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg class="theme-icon theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>
+        </svg>
+      </button>
+      <a class="btn btn-ghost btn-sm nav-github" href="https://github.com/radryc/strata" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="subhero" id="top">
+    <div class="hero-aurora" aria-hidden="true"></div>
+    <div class="wrap">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Overview</a><span aria-hidden="true">/</span><span>Systems</span>
+      </nav>
+      <p class="eyebrow"><span class="pulse-dot"></span> 13 public engineering repositories + hub</p>
+      <h1>Every repo, engine,<br><span class="grad">and byte layout.</span></h1>
+      <p class="subhero-lead">Strata spans 13 public Apache-2.0 repositories written in Go, TypeScript, Python, Protobuf, and C across 5 connected planes and 734 test suites.</p>
+
+      <div class="subhero-stats">
+        <div class="subhero-stat">
+          <b>13</b>
+          <span>Public Apache-2.0 repos</span>
+        </div>
+        <div class="subhero-stat">
+          <b>734</b>
+          <span>Test suites (unit · race · chaos)</span>
+        </div>
+        <div class="subhero-stat">
+          <b>5</b>
+          <span>Connected infrastructure planes</span>
+        </div>
+        <div class="subhero-stat">
+          <b>5</b>
+          <span>Languages (Go · TS · Py · Proto · C)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="subnav-wrap">
+    <div class="wrap">
+      <nav class="subnav" aria-label="Systems sections">
+        <a href="#repos" class="is-active">13 Repos</a>
+        <a href="#monofs">MonoFS</a>
+        <a href="#guardian">Guardian</a>
+        <a href="#doctor">Doctor</a>
+        <a href="#agent">Agent</a>
+        <a href="#lb-edge">LB-Edge</a>
+        <a href="#sqlagregator">sqlagregator</a>
+        <a href="#storage-primitives">KVS · Packager · cfg</a>
+        <a href="#platform-ops">tlsx · Cloud · Bootstrap</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- LANGUAGE BREAKDOWN + REPO MATRIX -->
+  <section class="section" id="repos">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Codebase inventory</p>
+          <h2 class="reveal">13 Public Repositories.<br><span class="dim">Filter by layer.</span></h2>
+        </div>
+        <p class="section-lead reveal">Filter by plane or storage/federation role across all 13 public repositories.</p>
+      </div>
+
+      <div class="lang-breakdown reveal">
+        <div class="bench-card-head" style="margin-bottom: 4px;">
+          <h3>Language Distribution</h3>
+          <span>Go 84.6% · TS 10.4% · Python 4.1% · Proto/C 0.9%</span>
+        </div>
+        <div class="lang-bar" role="img" aria-label="84.6% Go, 10.4% TypeScript, 4.1% Python, 0.9% Protobuf and C">
+          <span style="width: 84.6%; background: var(--accent);"></span>
+          <span style="width: 10.4%; background: #22d3ee;"></span>
+          <span style="width: 4.1%; background: var(--violet);"></span>
+          <span style="width: 0.9%; background: var(--green);"></span>
+        </div>
+        <div class="lang-legend">
+          <span><i style="background: var(--accent);"></i>Go · Core &amp; storage planes</span>
+          <span><i style="background: #22d3ee;"></i>TypeScript / TSX · UIs &amp; AWS CDK</span>
+          <span><i style="background: var(--violet);"></i>Python · Agent &amp; Nightwatch</span>
+          <span><i style="background: var(--green);"></i>Protobuf &amp; C · Wire &amp; FUSE</span>
+        </div>
+      </div>
+
+      <div class="filter-bar reveal" data-filter-group>
+        <button class="filter-btn is-active" type="button" data-filter="all" aria-pressed="true">All · 13</button>
+        <button class="filter-btn" type="button" data-filter="core" aria-pressed="false">Core Planes · 5</button>
+        <button class="filter-btn" type="button" data-filter="storage" aria-pressed="false">Storage &amp; Archives · 3</button>
+        <button class="filter-btn" type="button" data-filter="federation" aria-pressed="false">Federation &amp; Cloud · 3</button>
+        <button class="filter-btn" type="button" data-filter="security" aria-pressed="false">Security &amp; Bootstrap · 2</button>
+        <span class="filter-count" data-filter-count>Showing 13 of 13 repositories</span>
+      </div>
+
+      <div class="repo-grid">
+        <!-- Core 5 -->
+        <article class="repo-card reveal" data-filter-item="core">
+          <div class="repo-head"><span class="repo-name">monofs</span><span class="repo-cat">Core · Store</span></div>
+          <p class="repo-desc">HRW-sharded virtual monorepo (FUSE &amp; headless NutsDB overlay), Pebble metastore, Zoekt search, OCI v2 registry, Bazel AC/CAS, CI pipeline workers, and Parquet+Bluge telemetry logengine.</p>
+          <div class="repo-meta"><span>Go</span><span>C</span><span>Protobuf</span><span>TS</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">247 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/monofs" target="_blank" rel="noopener">monofs ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="core">
+          <div class="repo-head"><span class="repo-name">guardian</span><span class="repo-cat">Core · Deploy</span></div>
+          <p class="repo-desc">Zero-DB declarative control plane compiling partition/intent/asset DAGs into CAS queues, reconciled by pull-based GCP (OpenTofu), AWS (CDK), K8s, Docker, and local pushers.</p>
+          <div class="repo-meta"><span>Go</span><span>TypeScript</span><span>CAS DAG</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">223 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/guardian" target="_blank" rel="noopener">guardian ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="core">
+          <div class="repo-head"><span class="repo-name">doctor</span><span class="repo-cat">Core · Observe</span></div>
+          <p class="repo-desc">Pre-WAL privacy OTLP backend, PromQL/LogQL/TraceQL/SQL query surface, Sentinel alert engine, leader-leased recording rules, and 50k-pusher / 150k-target federation controller.</p>
+          <div class="repo-meta"><span>Go</span><span>TypeScript</span><span>OTLP</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">192 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/doctor" target="_blank" rel="noopener">doctor ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="core">
+          <div class="repo-head"><span class="repo-name">agent</span><span class="repo-cat">Core · Assist</span></div>
+          <p class="repo-desc">FastAPI + React platform assistant with Otto (SRE diagnostics + <code>confirm=true</code> mutations), Steve (MonoFS overlay diffs), 50+ tools, and Nightwatch shadow-mode SQLite ledger.</p>
+          <div class="repo-meta"><span>Python</span><span>TypeScript</span><span>FastAPI</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">19 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/agent" target="_blank" rel="noopener">agent ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="core">
+          <div class="repo-head"><span class="repo-name">lb</span><span class="repo-cat">Core · Traffic</span></div>
+          <p class="repo-desc">Stateless L4 registry (<code>:15051</code>), TCP proxy (2s snapshot sync, passive 3-dial breaker, zero-conn drain), Kubernetes Endpoints agent with multi-port matching, and PROXY protocol v1.</p>
+          <div class="repo-meta"><span>Go</span><span>Protobuf</span><span>L4 TCP</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">8 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/lb" target="_blank" rel="noopener">lb ↗</a>
+          </div>
+        </article>
+
+        <!-- Storage & Archives 3 -->
+
+        <article class="repo-card reveal" data-filter-item="storage">
+          <div class="repo-head"><span class="repo-name">kvs</span><span class="repo-cat">Storage · Raft KV</span></div>
+          <p class="repo-desc">Raft-replicated versioned KV store with optimistic concurrency, batch revisions, prefix-indexed <code>ListDir</code>, watch streams, hot/archive offload, and fail-closed audit logging.</p>
+          <div class="repo-meta"><span>Go</span><span>Protobuf</span><span>Raft</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">9 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/kvs" target="_blank" rel="noopener">kvs ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="storage">
+          <div class="repo-head"><span class="repo-name">packager</span><span class="repo-cat">Storage · Archives</span></div>
+          <p class="repo-desc">WORM Indexed-Tail archives (zstd + per-file nonce ChaCha20-Poly1305) with O(1) 2-request S3/GCS random access, <code>PathIndex</code> prefix dedup (5× RAM savings), and <code>PKGRv2</code> envelopes.</p>
+          <div class="repo-meta"><span>Go</span><span>S3 · GCS · Local</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">8 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/packager" target="_blank" rel="noopener">packager ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="storage">
+          <div class="repo-head"><span class="repo-name">cfg</span><span class="repo-cat">Storage · Config</span></div>
+          <p class="repo-desc">Two-tier versioned config store keeping the newest 5 SHAs in Raft KVS and compacting cold revisions into encrypted <code>packager</code> archives while retaining lightweight manifests.</p>
+          <div class="repo-meta"><span>Go</span><span>KVS + Packager</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">1 test suite</span>
+            <a class="repo-link" href="https://github.com/radryc/cfg" target="_blank" rel="noopener">cfg ↗</a>
+          </div>
+        </article>
+
+        <!-- Federation & Cloud 3 -->
+        <article class="repo-card reveal" data-filter-item="federation">
+          <div class="repo-head"><span class="repo-name">sqlagregator</span><span class="repo-cat">Federation · SQL</span></div>
+          <p class="repo-desc">Two-phase federated SQL planner, endpoint selector with coverage-gap validation, pure-Go hash merge, and native drivers for DuckDB, ClickHouse, BigQuery, Omni, and Logs Insights.</p>
+          <div class="repo-meta"><span>Go</span><span>6 sub-modules</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">14 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/sqlagregator" target="_blank" rel="noopener">sqlagregator ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="federation">
+          <div class="repo-head"><span class="repo-name">aws</span><span class="repo-cat">Federation · Cloud</span></div>
+          <p class="repo-desc">TypeScript CDK project deploying MonoFS (Router, Server, Fetcher), Guardian, ALB/NLB networking, Cognito SSO, and ECS Fargate observed pushers cleanly to AWS.</p>
+          <div class="repo-meta"><span>TypeScript</span><span>CDK · ECS · ALB</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">10 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/aws" target="_blank" rel="noopener">aws ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="federation">
+          <div class="repo-head"><span class="repo-name">k8s-top</span><span class="repo-cat">Federation · K8s</span></div>
+          <p class="repo-desc">Zero-persistence cluster-wide Kubernetes <code>metrics.k8s.io</code> poller exporting OTLP pod/container CPU and memory gauges tagged with Guardian partition, intent, and asset labels.</p>
+          <div class="repo-meta"><span>Go</span><span>OTLP/gRPC</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">Stateless</span>
+            <a class="repo-link" href="https://github.com/radryc/k8s-top" target="_blank" rel="noopener">k8s-top ↗</a>
+          </div>
+        </article>
+
+        <!-- Security & Bootstrap 2 -->
+        <article class="repo-card reveal" data-filter-item="security">
+          <div class="repo-head"><span class="repo-name">tlsx</span><span class="repo-cat">Security · PKI</span></div>
+          <p class="repo-desc">Hot-reloading TLS/mTLS toolkit shared by MonoFS, Guardian, Doctor, LB-Edge, and KVS: mtime leaf rotation without restarts, <code>VerifyPeerSPIFFE</code> URI SAN checks, and <code>tlsx</code> CLI.</p>
+          <div class="repo-meta"><span>Go</span><span>SPIFFE mTLS</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">3 test suites</span>
+            <a class="repo-link" href="https://github.com/radryc/tlsx" target="_blank" rel="noopener">tlsx ↗</a>
+          </div>
+        </article>
+
+        <article class="repo-card reveal" data-filter-item="security">
+          <div class="repo-head"><span class="repo-name">strata</span><span class="repo-cat">Bootstrap · Umbrella</span></div>
+          <p class="repo-desc">Umbrella repository, single-command kind + Authentik SSO bootstrap (<code>./scripts/bootstrap.sh up</code>), production hardening guide, architecture docs, and example onboarding apps.</p>
+          <div class="repo-meta"><span>TypeScript</span><span>Go</span><span>Shell</span></div>
+          <div class="repo-foot">
+            <span class="repo-loc">Front door</span>
+            <a class="repo-link" href="https://github.com/radryc/strata" target="_blank" rel="noopener">strata ↗</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEEP DIVES -->
+  <section class="section" id="monofs">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">01 · MonoFS (247 test suites)</p>
+          <h2 class="reveal">Virtual monorepo &amp;<br><span class="dim">storage fabric.</span></h2>
+        </div>
+        <p class="section-lead reveal">Separates metadata (<code>monofs-server</code> Pebble DB), content (<code>monofs-fetcher</code> + Packager S3/GCS), and coordination (<code>monofs-router</code>) while embedding KVS, Zoekt, OCI v2, Bazel cache, and Doctor's logengine.</p>
+      </div>
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">Client Data Path</span>
+          <h3>Direct HRW reads &amp; NutsDB overlays</h3>
+          <p><code>monofs-client</code> builds a local Rendezvous ring from router topology and routes <code>Lookup</code>, <code>ReadDir</code>, and <code>Read</code> directly to storage nodes without hitting the router.</p>
+          <ul class="spec-list">
+            <li>Local edits stay isolated in NutsDB; <code>--headless</code> serves the identical overlay over <code>session.sock</code> with no <code>/dev/fuse</code> or <code>SYS_ADMIN</code>.</li>
+            <li><code>monofs-session push</code> groups commits per repo and opens PRs/MRs; partial multi-repo failures cleanly revert commits rather than force-pushing.</li>
+          </ul>
+        </article>
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">Shared Fabric Planes</span>
+          <h3>Reserved namespaces &amp; logengine</h3>
+          <p>Three reserved namespaces — <code>guardian/</code>, <code>guardian-system/</code>, and <code>doctor/</code> — run versioned CAS storage, Parquet+Bluge telemetry chunks, and SQL federation inside the same cluster.</p>
+          <ul class="spec-list">
+            <li>OCI v2 registry (<code>:5000</code>) and Bazel AC/CAS (<code>:9092</code>) reuse MonoFS replication and cluster tokens.</li>
+            <li><code>monofs-pipeline-worker</code> executes affected DAG builds filtered through a strict safe env allowlist.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="guardian">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">02 · Guardian (223 test suites)</p>
+          <h2 class="reveal">Zero-DB intent<br><span class="dim">control plane.</span></h2>
+        </div>
+        <p class="section-lead reveal">Compiles YAML <code>Partition</code> and <code>Intent</code> manifests into dependency DAGs, detects drift, and dispatches tasks through CAS lease files with no inbound worker sockets.</p>
+      </div>
+
+      <article class="spec-card reveal" data-accent="cyan">
+        <span class="spec-kicker">Intent State Machine</span>
+        <h3>Compile → Check → Diff → Apply → Archive</h3>
+        <p>Every mutation carries a <code>MutationContext</code> (<code>PrincipalID</code>, <code>Reason</code>, <code>CorrelationID</code>) and writes immutable manifests/logs under <code>/.archive/&lt;partition&gt;/&lt;intent&gt;/</code>.</p>
+        <div class="state-strip" aria-label="Guardian intent state transitions">
+          <span class="state-node">Invalid</span><span class="state-arrow">→</span>
+          <span class="state-node">Blocked</span><span class="state-arrow">→</span>
+          <span class="state-node is-accent">Ready</span><span class="state-arrow">→</span>
+          <span class="state-node is-accent">Checking</span><span class="state-arrow">→</span>
+          <span class="state-node is-accent">Diffing</span><span class="state-arrow">→</span>
+          <span class="state-node is-violet">Applying (5m lease)</span><span class="state-arrow">→</span>
+          <span class="state-node is-green">Healthy</span><span class="state-arrow">/</span>
+          <span class="state-node is-amber">DriftedLocked</span><span class="state-arrow">/</span>
+          <span class="state-node">Observed (read-only)</span>
+        </div>
+        <ul class="spec-list">
+          <li><strong>5 Native Pushers:</strong> GCP (OpenTofu + Cloud Asset Inventory), AWS (TypeScript CDK + CloudFormation), Kubernetes, Docker, and Local server.</li>
+          <li><strong>Virtual Sets &amp; Sticky Exclusions:</strong> <code>guardianctl sets unassign</code> writes sticky exclusions so manifest reconciles never silently re-attach removed partitions.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="doctor">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">03 · Doctor (192 test suites)</p>
+          <h2 class="reveal">Privacy funnel &amp;<br><span class="dim">unified query API.</span></h2>
+        </div>
+        <p class="section-lead reveal">Ingests OTLP traces, logs, and metrics through a pre-WAL sanitization funnel into MonoFS logengine, paired with Sentinel alerting and 150k-target multi-cloud federation.</p>
+      </div>
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="amber">
+          <span class="spec-kicker">Ingest &amp; Alerting</span>
+          <h3>43.8k rec/s OTLP &amp; Sentinel rules</h3>
+          <p><code>doctor-ingest</code> scrubs keys and HMAC-tokenizes PII/PCI before writing to per-signal <code>fsync</code> WAL buffers. <code>doctor-rules</code> elects a leader via 30s MonoFS CAS lease, while Sentinel fingerprints PromQL/Guardian/AWS alerts for Nightwatch.</p>
+        </article>
+        <article class="spec-card reveal" data-accent="amber">
+          <span class="spec-kicker">Query &amp; Federation</span>
+          <h3>Grafana native + DuckDB SQL</h3>
+          <p>Exposes Prometheus, Loki, Tempo, and <code>POST /v1/sql/query</code> with <code>oauthPassThru</code> ACL checks. Singleflight deduplication serves 1,005 ops/s at p95 22 ms (1,888 ops/s at 2,000 offered RPS).</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="agent">
+    <div class="wrap">
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="violet">
+          <span class="spec-kicker">04 · Agent &amp; Nightwatch (19 test suites)</span>
+          <h3>Dual-persona tool loop &amp; shadow triage</h3>
+          <p>Routes turns between <strong>Otto</strong> (50+ live tools across Guardian/Doctor/MonoFS/LB-Edge behind <code>confirm=true</code>) and <strong>Steve</strong> (workspace-only diffs in MonoFS overlay, blocked from mutating infrastructure). Nightwatch runs read-only on <code>:8091</code>, polling Sentinel every 30s into an append-only hash-chained SQLite ledger.</p>
+        </article>
+        <article class="spec-card reveal" data-accent="blue" id="lb-edge">
+          <span class="spec-kicker">05 · LB-Edge (8 test suites)</span>
+          <h3>Zero-DB L4 TCP routing &amp; passive breakers</h3>
+          <p>Watches Kubernetes Endpoints annotations (<code>guardian.intent/expose</code>, <code>external-port</code>) via <code>k8s-agent</code>, selecting matching Service ports on multi-port Pods. The TCP proxy syncs <code>:18081/services</code> every 2s, trips a passive breaker after 3 dial failures, and drains removed backends cleanly to zero connections.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SQLAGREGATOR -->
+  <section class="section" id="sqlagregator">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">06 · sqlagregator (14 test suites)</p>
+          <h2 class="reveal">Two-phase<br><span class="dim">federated SQL.</span></h2>
+        </div>
+        <p class="section-lead reveal">A zero-driver core library (pulling only <code>yaml.v3</code>) with separate Go modules for each cloud dialect and pure-Go hash aggregation in the coordinator.</p>
+      </div>
+
+      <article class="spec-card reveal" data-accent="amber">
+        <span class="spec-kicker">Execution Pipeline</span>
+        <h3>AST → Two-Phase Planner → Dialect Pushdown → Pure-Go Merge</h3>
+        <div class="state-strip" aria-label="sqlagregator two-phase query pipeline">
+          <span class="state-node is-accent">SELECT AST</span><span class="state-arrow">→</span>
+          <span class="state-node">Catalog + Time-Shard Prune</span><span class="state-arrow">→</span>
+          <span class="state-node is-amber">Coverage Check</span><span class="state-arrow">→</span>
+          <span class="state-node is-violet">5 Dialect Emitters</span><span class="state-arrow">→</span>
+          <span class="state-node is-green">Pure-Go Hash Merge</span>
+        </div>
+        <ul class="spec-list">
+          <li><strong>Driver nuances handled cleanly:</strong> CloudWatch Omni retries session-name collisions with a process-unique suffix; Logs Insights emits <code>FROM_UNIXTIME(...)</code> windows because <code>@timestamp</code> is a string; ClickHouse binds <code>attributes['guardian.partition']</code>.</li>
+          <li><strong>Fail-closed governance:</strong> MonoFS router enforces <code>--sql-require-policy</code> (default true) and fails with <code>coverage_gap</code> if a healthy shard is excluded without <code>-allow-partial</code>.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- KVS, PACKAGER, CFG -->
+  <section class="section" id="storage-primitives">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">07 · Reusable Go storage crates</p>
+        <h2 class="reveal">KVS, Packager &amp; cfg.</h2>
+      </div>
+
+      <div class="three-col">
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">kvs (9 test suites)</span>
+          <h3>Raft versioned KV</h3>
+          <p>Optimistic CAS, batch revisions, prefix-indexed <code>ListDir</code> (p95 <strong>0.27–0.72 ms</strong>), watches, hot/archive retention, and JSONL audit trails.</p>
+        </article>
+
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">packager (8 test suites)</span>
+          <h3>Indexed-Tail O(1) archives</h3>
+          <p>Retrieves any file from S3/GCS in 2–3 byte-range calls without scanning; <code>PathIndex</code> shrinks 100K file indexes from ~6.2 MB to ~1.2 MB; auto-skips zstd on 20+ pre-compressed formats.</p>
+          <div class="byte-layout" aria-label="Packager Indexed-Tail binary layout">
+            <div class="byte-seg"><b>Data Blocks 0..N</b><small>per-file random 12B nonce + zstd/AEAD</small></div>
+            <div class="byte-seg"><b>Encrypted Master Index</b><small>zstd + ChaCha20-Poly1305</small></div>
+            <div class="byte-seg"><b>8B Footer</b><small>LE uint64 index len</small></div>
+          </div>
+        </article>
+
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">cfg (1 test suite)</span>
+          <h3>Two-tier versioned config</h3>
+          <p>Keeps newest 5 revisions hot in Raft KVS (<code>/cfg/&lt;app&gt;/current</code>) and compacts excess versions into encrypted <code>packager</code> cold archives while keeping directory manifests online.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY & CLOUD OPS -->
+  <section class="section" id="platform-ops">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">08 · PKI, RBAC &amp; Cloud Tooling</p>
+        <h2 class="reveal">tlsx, k8s-top, aws &amp; bootstrap.</h2>
+      </div>
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="blue">
+          <span class="spec-kicker">tlsx (3 test suites) + compiled RBAC</span>
+          <h3>Zero-restart SPIFFE mTLS &amp; compiled ACLs</h3>
+          <p><code>tlsx</code> reads <code>STRATA_TLS_*</code> across Go gRPC servers and Agent's Python backend, re-reading leaf certs on mtime changes and verifying SPIFFE URI SAN allowlists. Guardian compiles RBAC partition/log/trace/SQL/MonoFS grants from <code>base.yaml</code> into one runtime bundle.</p>
+        </article>
+        <article class="spec-card reveal" data-accent="blue">
+          <span class="spec-kicker">k8s-top · aws · strata</span>
+          <h3>Multi-cloud deployment &amp; bootstrap</h3>
+          <p><code>k8s-top</code> exports Guardian-tagged pod/container OTLP metrics; <code>aws</code> deploys MonoFS + Guardian onto ECS Fargate via TypeScript CDK; <code>strata</code> provides single-command kind bootstrap and application onboarding workflows.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="/" aria-label="Strata home">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+          <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+        </svg>
+        <span class="brand-word">STRATA</span>
+        <span class="brand-sub">/ OSS</span>
+      </a>
+      <p>Open-source (Apache-2.0) systems infrastructure engineered in the open by <a href="https://github.com/radryc" target="_blank" rel="noopener">@radryc</a>. 13 public repositories · 5 connected planes · 734 test files.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <div>
+        <span class="footer-head">Hub Pages</span>
+        <a href="/">Overview</a>
+        <a href="/architecture/">Architecture</a>
+        <a href="/systems/">13 Repositories</a>
+        <a href="/benchmarks/">Benchmark Lab</a>
+        <a href="/security/">Security &amp; Privacy</a>
+        <a href="/#quickstart">Local Bootstrap</a>
+      </div>
+      <div>
+        <span class="footer-head">Core Planes</span>
+        <a href="https://github.com/radryc/strata" target="_blank" rel="noopener">Strata Umbrella</a>
+        <a href="https://github.com/radryc/monofs" target="_blank" rel="noopener">MonoFS</a>
+        <a href="https://github.com/radryc/guardian" target="_blank" rel="noopener">Guardian</a>
+        <a href="https://github.com/radryc/doctor" target="_blank" rel="noopener">Doctor</a>
+        <a href="https://github.com/radryc/lb" target="_blank" rel="noopener">LB-Edge</a>
+        <a href="https://github.com/radryc/agent" target="_blank" rel="noopener">Agent</a>
+      </div>
+      <div>
+        <span class="footer-head">Primitives &amp; Tools</span>
+        <a href="https://github.com/radryc/sqlagregator" target="_blank" rel="noopener">sqlagregator</a>
+        <a href="https://github.com/radryc/cfg" target="_blank" rel="noopener">cfg</a>
+        <a href="https://github.com/radryc/kvs" target="_blank" rel="noopener">kvs (Raft KV)</a>
+        <a href="https://github.com/radryc/packager" target="_blank" rel="noopener">packager</a>
+        <a href="https://github.com/radryc/tlsx" target="_blank" rel="noopener">tlsx (SPIFFE mTLS)</a>
+        <a href="https://github.com/radryc?tab=repositories" target="_blank" rel="noopener">all public repos ↗</a>
+      </div>
+    </nav>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© <span id="year">2026</span> Strata · open source · Apache-2.0 · <time datetime="2026-11-23">last updated 23 Nov 2026</time></span>
+    <span class="footer-status"><i></i> Built in public · 13 repos · @radryc</span>
+  </div>
+</footer>
+
+<script src="/assets/app.js?v=2026-11-23a" defer></script>
+</body>
+</html>

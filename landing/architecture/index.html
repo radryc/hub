@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture — Strata Infrastructure Stack</title>
+<meta name="description" content="End-to-end systems architecture of Strata: client-side HRW sharding, zero-DB CAS lease deployment queues, pre-WAL privacy funnel, two-phase federated SQL, 150k-target federation, and SRE failure playbooks.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="author" content="radryc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060a14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6fa">
+<link rel="canonical" href="https://stratasre.com/architecture/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Strata">
+<meta property="og:url" content="https://stratasre.com/architecture/">
+<meta property="og:title" content="Architecture — Strata Infrastructure Stack">
+<meta property="og:description" content="How MonoFS, Guardian, Doctor, LB-Edge, and Agent compose into a single storage-backed control plane with zero external deployment databases.">
+<meta property="og:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Architecture — Strata Infrastructure Stack">
+<meta name="twitter:description" content="Topology, state ownership, wire ports, and 10 failure-mode playbooks across Strata's five planes.">
+<meta name="twitter:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/assets/theme.js?v=2026-11-23a"></script>
+<link rel="stylesheet" href="/assets/style.css?v=2026-11-23b">
+<noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Strata System Architecture — Five Planes on One Storage Fabric",
+  "description": "System topology, core architectural bets, state ownership matrix, wire ports, and failure recovery playbooks for Strata.",
+  "url": "https://stratasre.com/architecture/",
+  "dateModified": "2026-11-23",
+  "author": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" },
+  "publisher": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" }
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="Strata home">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+        <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+      </svg>
+      <span class="brand-word">STRATA</span>
+      <span class="brand-sub">/ OSS</span>
+    </a>
+
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="/">Overview</a>
+      <a href="/architecture/" aria-current="page">Architecture</a>
+      <a href="/systems/">Systems</a>
+      <a href="/benchmarks/">Benchmarks</a>
+      <a href="/security/">Security</a>
+      <a href="/#about">About</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <svg class="theme-icon theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg class="theme-icon theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>
+        </svg>
+      </button>
+      <a class="btn btn-ghost btn-sm nav-github" href="https://github.com/radryc/strata" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="subhero" id="top">
+    <div class="hero-aurora" aria-hidden="true"></div>
+    <div class="wrap">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Overview</a><span aria-hidden="true">/</span><span>Architecture</span>
+      </nav>
+      <p class="eyebrow"><span class="pulse-dot"></span> System topology &amp; invariants</p>
+      <h1>Five planes.<br><span class="grad">One storage fabric.</span></h1>
+      <p class="subhero-lead">Strata eliminates the external SQL databases, static load-balancer files, and disconnected telemetry silos between source, deployment, traffic, and observability. Below are the exact wire paths, durability boundaries, and failure modes.</p>
+
+      <div class="subhero-stats">
+        <div class="subhero-stat">
+          <b>0 DBs</b>
+          <span>Guardian &amp; LB-Edge require no SQL DB</span>
+        </div>
+        <div class="subhero-stat">
+          <b>5m / 30m</b>
+          <span>CAS task claim lease &amp; stale timeout</span>
+        </div>
+        <div class="subhero-stat">
+          <b>150,000</b>
+          <span>Scoped AWS + GCP federation targets</span>
+        </div>
+        <div class="subhero-stat">
+          <b>2s</b>
+          <span>LB-Edge proxy snapshot reconcile loop</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="subnav-wrap">
+    <div class="wrap">
+      <nav class="subnav" aria-label="Architecture sections">
+        <a href="#topology" class="is-active">Topology Diagram</a>
+        <a href="#bets">6 Core Bets</a>
+        <a href="#state">State Ownership</a>
+        <a href="#ports">Wire Ports</a>
+        <a href="#failures">Failure Playbook</a>
+        <a href="#boundaries">Known Boundaries</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- TOPOLOGY SVG -->
+  <section class="section" id="topology">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Control &amp; data paths</p>
+          <h2 class="reveal">System Topology</h2>
+        </div>
+        <p class="section-lead reveal">Coordination flows through routers and CAS queues; steady-state file reads bypass the router directly to HRW-selected Pebble storage nodes, while deployment workers pull work with zero inbound deploy ports.</p>
+      </div>
+
+      <figure class="arch-diagram-card reveal">
+        <svg class="arch-svg" viewBox="0 0 1120 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Strata end-to-end architecture diagram connecting MonoFS, Guardian, LB-Edge, Doctor, Agent, tlsx, and compiled RBAC">
+          <defs>
+            <marker id="arr-accent" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="var(--accent)"/>
+            </marker>
+            <marker id="arr-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="var(--green)"/>
+            </marker>
+            <marker id="arr-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="var(--amber)"/>
+            </marker>
+            <marker id="arr-violet" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="var(--violet)"/>
+            </marker>
+          </defs>
+
+          <!-- Outer Security Boundary -->
+          <rect x="14" y="14" width="1092" height="592" rx="18" fill="none" stroke="var(--line-strong)" stroke-dasharray="6 5" stroke-width="1.2"/>
+          <text x="34" y="38" fill="var(--faint)" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="1.4">TRUST BOUNDARY · TLSX SPIFFE MTLS (STRATA_TLS_*) + COMPILED ACCESS POLICY (PARTITIONS · LOGS · TRACES · SQL · MONOFS)</text>
+
+          <!-- Developer / Client -->
+          <rect x="34" y="68" width="198" height="106" rx="12" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="1.3"/>
+          <text x="48" y="92" fill="var(--accent)" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1.2">AUTHORING</text>
+          <text x="48" y="116" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="18" font-weight="600">Dev / CI / CLI</text>
+          <text x="48" y="138" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">monofs-client (FUSE / headless)</text>
+          <text x="48" y="156" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">guardianctl · forge · NutsDB</text>
+
+          <!-- MonoFS Plane -->
+          <rect x="34" y="214" width="440" height="236" rx="14" fill="var(--panel)" stroke="var(--green)" stroke-opacity="0.55" stroke-width="1.5"/>
+          <text x="52" y="240" fill="var(--green)" font-family="JetBrains Mono, monospace" font-size="10.5" letter-spacing="1.4">05 · MONOFS STORAGE &amp; SOURCE FABRIC</text>
+
+          <rect x="52" y="258" width="192" height="72" rx="9" fill="var(--bg)" stroke="var(--line-strong)"/>
+          <text x="64" y="280" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="600">monofs-router :9090</text>
+          <text x="64" y="298" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">Control · UI :8080 · SQL</text>
+          <text x="64" y="314" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">guardian/ &amp; guardian-system/</text>
+
+          <rect x="262" y="258" width="194" height="72" rx="9" fill="var(--bg)" stroke="var(--line-strong)"/>
+          <text x="274" y="280" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="600">monofs-server :9000</text>
+          <text x="274" y="298" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">HRW shards · Pebble DB</text>
+          <text x="274" y="314" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">Parquet + Bluge logengine</text>
+
+          <rect x="52" y="346" width="192" height="86" rx="9" fill="var(--bg)" stroke="var(--line-strong)"/>
+          <text x="64" y="368" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="600">monofs-fetcher :9200</text>
+          <text x="64" y="386" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">Packager ChaCha20 archives</text>
+          <text x="64" y="402" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">O(1) S3 / GCS / MinIO reads</text>
+          <text x="64" y="418" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">Git sync &amp; PR rollback</text>
+
+          <rect x="262" y="346" width="194" height="86" rx="9" fill="var(--bg)" stroke="var(--line-strong)"/>
+          <text x="274" y="368" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="14" font-weight="600">Fabric Services</text>
+          <text x="274" y="386" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">Raft KVS (CAS + watch)</text>
+          <text x="274" y="402" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">Zoekt :9100 · OCI :5000</text>
+          <text x="274" y="418" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10">Bazel :9092 · sqlagregator</text>
+
+          <!-- Guardian Plane -->
+          <rect x="522" y="68" width="276" height="170" rx="14" fill="var(--panel)" stroke="#22d3ee" stroke-opacity="0.55" stroke-width="1.5"/>
+          <text x="540" y="94" fill="#22d3ee" font-family="JetBrains Mono, monospace" font-size="10.5" letter-spacing="1.4">04 · GUARDIAN CONTROL PLANE</text>
+          <text x="540" y="120" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="17" font-weight="600">guardiand :18090</text>
+          <text x="540" y="142" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Intent + Asset DAG Compiler</text>
+          <text x="540" y="160" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Queues tasks → /.queues/&lt;pusher&gt;/</text>
+          <text x="540" y="178" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Observed Collector (:19090 / :19091)</text>
+          <text x="540" y="196" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Immutable .archive/ + HMAC webhooks</text>
+          <text x="540" y="218" fill="#22d3ee" font-family="JetBrains Mono, monospace" font-size="10">Zero DB · zero inbound pusher port</text>
+
+          <!-- Pushers & Workloads -->
+          <rect x="836" y="68" width="248" height="170" rx="14" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="1.3"/>
+          <text x="854" y="94" fill="var(--accent)" font-family="JetBrains Mono, monospace" font-size="10.5" letter-spacing="1.4">EXECUTION · CAS LEASE PULL</text>
+          <text x="854" y="120" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="16" font-weight="600">Native Pushers</text>
+          <text x="854" y="142" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">• GCP (OpenTofu + Asset Inv)</text>
+          <text x="854" y="160" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">• AWS (CDK + CloudFormation)</text>
+          <text x="854" y="178" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">• On-prem K8s · Docker · Local</text>
+          <text x="854" y="198" fill="var(--green)" font-family="JetBrains Mono, monospace" font-size="10">5m claim lease · DIFF→CHECK→APPLY</text>
+          <text x="854" y="218" fill="var(--faint)" font-family="JetBrains Mono, monospace" font-size="10">Deploys workloads + k8s-top</text>
+
+          <!-- LB-Edge Plane -->
+          <rect x="836" y="274" width="248" height="114" rx="14" fill="var(--panel)" stroke="var(--accent)" stroke-opacity="0.55" stroke-width="1.5"/>
+          <text x="854" y="300" fill="var(--accent)" font-family="JetBrains Mono, monospace" font-size="10.5" letter-spacing="1.4">02 · LB-EDGE TRAFFIC</text>
+          <text x="854" y="324" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="16" font-weight="600">Registry :15051 + Proxy</text>
+          <text x="854" y="344" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">k8s-agent watches Endpoints</text>
+          <text x="854" y="362" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">2s sync · 3-strike breaker · drain</text>
+          <text x="854" y="378" fill="var(--faint)" font-family="JetBrains Mono, monospace" font-size="10">Prometheus :19090/metrics</text>
+
+          <!-- Doctor Plane -->
+          <rect x="522" y="274" width="276" height="176" rx="14" fill="var(--panel)" stroke="var(--amber)" stroke-opacity="0.55" stroke-width="1.5"/>
+          <text x="540" y="300" fill="var(--amber)" font-family="JetBrains Mono, monospace" font-size="10.5" letter-spacing="1.4">03 · DOCTOR OBSERVABILITY</text>
+          <text x="540" y="324" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="16" font-weight="600">Ingest :4317/:4318 · Query :18080</text>
+          <text x="540" y="345" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Pre-WAL HMAC + Luhn PCI funnel</text>
+          <text x="540" y="363" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Per-signal fsync WAL (429 cap)</text>
+          <text x="540" y="381" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">PromQL · LogQL · TraceQL · SQL</text>
+          <text x="540" y="399" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Sentinel :18081 · Rules leader lease</text>
+          <text x="540" y="421" fill="var(--amber)" font-family="JetBrains Mono, monospace" font-size="10">150k-target federation (500-target shards)</text>
+
+          <!-- Agent + Nightwatch Plane -->
+          <rect x="34" y="480" width="690" height="104" rx="14" fill="var(--panel)" stroke="var(--violet)" stroke-opacity="0.55" stroke-width="1.5"/>
+          <text x="52" y="505" fill="var(--violet)" font-family="JetBrains Mono, monospace" font-size="10.5" letter-spacing="1.4">01 · AGENT &amp; NIGHTWATCH ASSISTANCE PLANE</text>
+          <text x="52" y="531" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="16" font-weight="600">FastAPI :8090 · React :3000 · Nightwatch :8091</text>
+          <text x="52" y="553" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Otto (SRE tools + confirm=true gate) · Steve (MonoFS overlay diffs, zero infra mutate)</text>
+          <text x="52" y="571" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Nightwatch: 30s Sentinel poll · hash-chained SQLite ledger · escalation &lt; 0.5 confidence</text>
+
+          <!-- Storage / Cloud Backends box -->
+          <rect x="758" y="480" width="326" height="104" rx="14" fill="var(--panel)" stroke="var(--line-strong)" stroke-width="1.3"/>
+          <text x="776" y="505" fill="var(--green)" font-family="JetBrains Mono, monospace" font-size="10.5" letter-spacing="1.4">EXTERNAL STORAGE &amp; SQL</text>
+          <text x="776" y="531" fill="var(--ink)" font-family="Space Grotesk, sans-serif" font-size="15" font-weight="600">S3 · GCS · ClickHouse · BigQuery · Omni</text>
+          <text x="776" y="553" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">sqlagregator two-phase pushdowns</text>
+          <text x="776" y="571" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5">Packager O(1) byte-range archives (PKGRv2)</text>
+
+          <!-- Arrows -->
+          <!-- Dev -> MonoFS router/server -->
+          <path d="M 130 174 L 130 212" stroke="var(--green)" stroke-width="1.5" fill="none" marker-end="url(#arr-green)"/>
+          <text x="140" y="198" fill="var(--faint)" font-family="JetBrains Mono, monospace" font-size="9.5">direct HRW read (:9000)</text>
+
+          <!-- Dev -> Guardian -->
+          <path d="M 232 118 L 520 118" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr-accent)"/>
+          <text x="295" y="110" fill="var(--faint)" font-family="JetBrains Mono, monospace" font-size="9.5">push bundles (CAS)</text>
+
+          <!-- Guardian <-> MonoFS -->
+          <path d="M 522 210 L 474 260" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr-accent)" marker-start="url(#arr-accent)"/>
+
+          <!-- Pushers <-> MonoFS/Guardian queue -->
+          <path d="M 836 146 L 798 146" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr-accent)" marker-start="url(#arr-accent)"/>
+
+          <!-- Pushers -> LB-Edge (Endpoints) -->
+          <path d="M 960 238 L 960 272" stroke="var(--accent)" stroke-width="1.5" fill="none" marker-end="url(#arr-accent)"/>
+
+          <!-- Workloads/Pushers -> Doctor OTLP -->
+          <path d="M 836 226 L 798 296" stroke="var(--amber)" stroke-width="1.5" fill="none" marker-end="url(#arr-amber)"/>
+
+          <!-- Doctor -> MonoFS logengine -->
+          <path d="M 522 356 L 476 356" stroke="var(--amber)" stroke-width="1.5" fill="none" marker-end="url(#arr-amber)" marker-start="url(#arr-green)"/>
+
+          <!-- Agent -> MonoFS / Doctor / Guardian -->
+          <path d="M 240 480 L 240 452" stroke="var(--violet)" stroke-width="1.5" fill="none" marker-end="url(#arr-violet)"/>
+          <path d="M 590 480 L 590 452" stroke="var(--violet)" stroke-width="1.5" fill="none" marker-end="url(#arr-violet)"/>
+
+          <!-- Doctor -> External SQL / Cloud -->
+          <path d="M 798 424 L 840 478" stroke="var(--amber)" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-amber)"/>
+        </svg>
+        <figcaption class="arch-caption">
+          <span>Every plane shares MonoFS namespaces and tlsx SPIFFE identities; Guardian pushers hold no open deployment server port.</span>
+          <span>Source: strata/docs · monofs/docs · guardian/docs · doctor/docs</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 6 CORE BETS -->
+  <section class="section" id="bets">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Design decisions</p>
+        <h2 class="reveal">Six architectural bets<br><span class="dim">that define the stack.</span></h2>
+      </div>
+
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="cyan">
+          <span class="spec-kicker">Bet 01 · Guardian + MonoFS + KVS</span>
+          <h3>Filesystem-as-database &amp; pull-based CAS leases</h3>
+          <p>Guardian runs no Postgres, etcd, or inbound worker deployment channel. Partitions, intents, runtime state, and queues are versioned CAS files in MonoFS backed by embedded Raft KVS.</p>
+          <ul class="spec-list">
+            <li>Reconciler compiles intent <code>joins</code> and asset <code>dependsOn</code> DAGs, resolving <code>${intent.X.outputs.KEY}</code>.</li>
+            <li>Tasks land in <code>/.queues/&lt;pusher&gt;/</code>; pushers CAS-create <code>.claims/&lt;taskID&gt;.json</code> with a 5-minute lease (30m stale cutoff).</li>
+            <li><code>DESTROY</code> executes in reverse dependency order; <code>observed</code> intents stay strictly read-only via <code>:19090/:19091</code>.</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">Bet 02 · MonoFS + Packager</span>
+          <h3>Client-side HRW sharding &amp; headless writable overlays</h3>
+          <p>Hot steady-state reads never hop through the router. <code>monofs-client</code> fetches topology once, builds a local weighted Rendezvous ring, and hashes paths directly to <code>monofs-server:9000</code>.</p>
+          <ul class="spec-list">
+            <li>Local edits land in a per-session <strong>NutsDB overlay</strong>; <code>--headless</code> serves the identical workspace over a Unix socket without <code>/dev/fuse</code>.</li>
+            <li>Cold content lives in <strong>Packager</strong> Indexed-Tail archives (<code>ChaCha20-Poly1305</code> + <code>zstd</code>), retrieving any file in 2–3 HTTP byte-range requests.</li>
+            <li><code>PathIndex</code> deduplicates directory prefixes (100K files in ~1.2 MB vs ~6.2 MB flat map).</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="amber">
+          <span class="spec-kicker">Bet 03 · Doctor</span>
+          <h3>One-way pre-WAL privacy funnel &amp; unified query plane</h3>
+          <p>Doctor owns no custom segment format — it writes Parquet + Bluge chunks into MonoFS logengine while guaranteeing raw secrets and unmasked PII never hit disk.</p>
+          <ul class="spec-list">
+            <li>Privacy runs during OTLP flattening <em>before</em> WAL append: secret keys/bearer/JWTs become <code>[REDACTED]</code>; identity/PCI fields become HMAC <code>tok_&lt;16 hex&gt;</code>.</li>
+            <li>Independent per-signal <code>fsync</code> WAL buffers return <code>429 / ResourceExhausted</code> cleanly on backpressure.</li>
+            <li>One query service serves native JSON, Prometheus, Loki, Tempo, DuckDB SQL, and leader-leased recording rules (30s CAS lease).</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="blue">
+          <span class="spec-kicker">Bet 04 · sqlagregator</span>
+          <h3>Two-phase federated SQL with coverage guarantees</h3>
+          <p><code>sqlagregator</code> compiles restricted <code>SELECT</code> queries into an AST, binds catalog endpoints, and pushes partial aggregations down to native backend dialects before merging in pure Go.</p>
+          <ul class="spec-list">
+            <li>Five emitters: MonoFS DuckDB, ClickHouse (<code>attributes['...']</code>), BigQuery REST, CloudWatch Omni, and Logs Insights (<code>FROM_UNIXTIME</code>).</li>
+            <li>Time-shard pruning skips irrelevant backends; excluding a healthy shard fails closed with <code>coverage_gap</code> unless <code>-allow-partial</code> is set.</li>
+            <li>Router enforces loaded access policy via <code>--sql-require-policy</code> (default true) and user <code>sql</code> scopes.</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="violet">
+          <span class="spec-kicker">Bet 05 · Doctor Federation Controller</span>
+          <h3>Scoped multi-account federation for 50k pushers / 150k targets</h3>
+          <p>A dedicated controller builds 500-target SHA-256 catalog shards and 256 AES-256-GCM token shards under a 90s MonoFS leader lease so query nodes never load monolithic catalogs or raw secrets.</p>
+          <ul class="spec-list">
+            <li><code>atomic.Pointer[managerState]</code> guarantees zero-tear hot-swaps; corrupt shards preserve the last-known-good catalog.</li>
+            <li>Lazy token resolution coalesces via <code>singleflight</code> with generation bumps so a stale 401 never overwrites a rotated token.</li>
+            <li>Global 64 / per-query 8 inflight cap + 2-strike per-target circuit breakers; unscoped fleet queries fail fast with HTTP <code>422</code>.</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="cyan">
+          <span class="spec-kicker">Bet 06 · LB-Edge</span>
+          <h3>Ephemeral L4 registry with automatic re-registration</h3>
+          <p>LB-Edge discards state persistence altogether. Four compact Go binaries reconstruct routing state from Kubernetes Endpoints informers and <code>LB_BOOTSTRAP</code>.</p>
+          <ul class="spec-list">
+            <li>Multi-port Kubernetes Services match the exact Service port backing <code>guardian.intent/external-port</code> so traffic never round-robins across unrelated ports.</li>
+            <li>Proxy polls <code>GET /services</code> every 2s; removed backends stop taking new TCP connections and drain to zero active streams.</li>
+            <li>3 consecutive dial failures trip the passive breaker until the next healthy snapshot refreshes the pool.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATE OWNERSHIP -->
+  <section class="section" id="state">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Durability &amp; source of truth</p>
+        <h2 class="reveal">State Ownership Matrix</h2>
+        <p class="section-lead reveal">Every byte in Strata has an explicit home, durability guarantee, and rebuild path.</p>
+      </div>
+
+      <div class="table-wrap reveal">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>Physical Home</th>
+              <th>Engine / Format</th>
+              <th>Durability &amp; Concurrency</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>File metadata &amp; dir index</strong></td>
+              <td><code>monofs-server</code> local disk</td>
+              <td>Pebble DB (HRW-sharded)</td>
+              <td>Durable, replicated across primary + async replicas; failover bucket on outage</td>
+            </tr>
+            <tr>
+              <td><strong>File &amp; OCI blob content</strong></td>
+              <td><code>monofs-fetcher</code> / S3 / GCS</td>
+              <td>Packager WORM archives (<code>ChaCha20-Poly1305</code> + <code>zstd</code>)</td>
+              <td>Content-addressed, immutable, O(1) 2-request HTTP byte-range reads</td>
+            </tr>
+            <tr>
+              <td><strong>Uncommitted IDE / Steve edits</strong></td>
+              <td><code>monofs-client</code> overlay</td>
+              <td>NutsDB local overlay + session socket</td>
+              <td>Local per-session; never hits shared cluster until <code>monofs-session push</code></td>
+            </tr>
+            <tr>
+              <td><strong>Guardian desired state &amp; queues</strong></td>
+              <td>MonoFS <code>guardian/</code> &amp; <code>guardian-system/</code></td>
+              <td>Embedded Raft KVS (hot) + Packager (<code>cfg</code> cold)</td>
+              <td>Optimistic CAS versions, 5m task claim leases, immutable <code>.archive/</code> logs</td>
+            </tr>
+            <tr>
+              <td><strong>Traces, logs &amp; metrics</strong></td>
+              <td>MonoFS logengine</td>
+              <td>Parquet chunks + Bluge index + manifest</td>
+              <td>HRW-sharded across storage nodes; envelope encryption &amp; compaction</td>
+            </tr>
+            <tr>
+              <td><strong>Ingest burst buffer</strong></td>
+              <td><code>doctor-ingest</code> local disk</td>
+              <td>Per-signal WAL (<code>.doctor/*-buffer/</code>)</td>
+              <td><code>fsync</code> durable across restart until flushed; 429 on overflow</td>
+            </tr>
+            <tr>
+              <td><strong>Federation catalog &amp; tokens</strong></td>
+              <td>MonoFS <code>/doctor/v1/federation/</code></td>
+              <td>500-target SHA-256 shards + 256 token shards</td>
+              <td>AES-256-GCM encrypted tokens; <code>atomic.Pointer</code> swap; CAS under 90s leader lease</td>
+            </tr>
+            <tr>
+              <td><strong>Agent &amp; Nightwatch ledgers</strong></td>
+              <td><code>/data/lagent.db</code> &amp; Nightwatch DB</td>
+              <td>SQLite + append-only hash-chained events</td>
+              <td>Durable local volumes; writer chain halts on unacknowledged inserts</td>
+            </tr>
+            <tr>
+              <td><strong>L4 routes &amp; active breakers</strong></td>
+              <td><code>lb-edge</code> / <code>registry</code> / <code>proxy</code> memory</td>
+              <td>In-memory state</td>
+              <td>Intentionally ephemeral; reconstructed via 30s K8s informer resync + bootstrap</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- WIRE PORTS -->
+  <section class="section" id="ports">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Interfaces &amp; protocols</p>
+        <h2 class="reveal">Wire Surfaces &amp; Ports</h2>
+      </div>
+
+      <div class="table-wrap reveal">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Surface</th>
+              <th>Port / Path</th>
+              <th>Protocol &amp; Auth Contract</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>MonoFS Router</strong></td>
+              <td>Cluster control, ingest, SQL</td>
+              <td><code>:9090</code> / <code>:8080</code></td>
+              <td>gRPC + HTTP UI; OIDC / break-glass / <code>pkg/authz</code> + <code>tlsx</code> mTLS</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS Server / Fetcher / Search</strong></td>
+              <td>Shards, archives, Zoekt</td>
+              <td><code>:9000</code> / <code>:9200</code> / <code>:9100</code></td>
+              <td>gRPC + SPIFFE URI SAN peer allowlists; OCI v2 <code>:5000</code>; Bazel <code>:9092</code></td>
+            </tr>
+            <tr>
+              <td><strong>Guardian Daemon &amp; Pushers</strong></td>
+              <td>UI/API &amp; observed read APIs</td>
+              <td><code>:18090</code> / <code>:19090</code> / <code>:19091</code></td>
+              <td>OIDC + <code>/api/m2m/*</code>; AWS/GCP read APIs require TLS on non-loopback</td>
+            </tr>
+            <tr>
+              <td><strong>Doctor Ingest / Query / Rules</strong></td>
+              <td>OTLP, Prom/Loki/Tempo/SQL, Alerts</td>
+              <td><code>:4317</code> / <code>:4318</code> / <code>:18080</code> / <code>:18081</code></td>
+              <td>OTLP gRPC (256 MB cap) + HTTP; OIDC + partition access enforcement</td>
+            </tr>
+            <tr>
+              <td><strong>LB-Edge</strong></td>
+              <td>DiscoveryRegistry, sync, metrics</td>
+              <td><code>:15051</code> / <code>:18081</code> / <code>:19090</code></td>
+              <td>gRPC registry, HTTP <code>/services</code> snapshot, Prometheus metrics, dynamic TCP ports</td>
+            </tr>
+            <tr>
+              <td><strong>Agent &amp; Nightwatch</strong></td>
+              <td>Chat WS/HTTP, React UI, Nightwatch</td>
+              <td><code>:8090</code> / <code>:3000</code> / <code>:8091</code></td>
+              <td>PKCE OIDC + device flow; internal bearer tokens; Nightwatch API not public</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAILURE MODES -->
+  <section class="section" id="failures">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Operational resilience</p>
+        <h2 class="reveal">Failure Modes &amp; Recovery</h2>
+        <p class="section-lead reveal">Documented degradation paths for every critical plane — verified by unit, chaos, and kill-node soak tests.</p>
+      </div>
+
+      <div class="table-wrap reveal">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Failure Scenario</th>
+              <th>Immediate Blast Radius</th>
+              <th>Built-in Recovery Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>MonoFS storage node killed</strong></td>
+              <td>Reads/writes assigned to that HRW shard miss</td>
+              <td>Router assigns failover node + TTL'd file list; delayed rebalance after ~10m; clients re-route seamlessly on return (verified in kill <code>node-c</code> soak)</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS router unavailable</strong></td>
+              <td>New mounts, ingests, publishes, Guardian writes pause</td>
+              <td>Steady-state client reads continue directly via cached local HRW ring; clients re-register on router recovery</td>
+            </tr>
+            <tr>
+              <td><strong>Guardian pusher offline / crashed</strong></td>
+              <td>In-flight apply stalls; tasks accumulate in queue</td>
+              <td><code>.claims/&lt;taskID&gt;.json</code> 5-minute lease expires cleanly; surviving pusher reclaims and resumes up to 30m stale cutoff</td>
+            </tr>
+            <tr>
+              <td><strong>Concurrent Guardian write / ListDir race</strong></td>
+              <td>A concurrent write hides a <code>.state</code> entry mid-scan</td>
+              <td>Runtime skips that single intent for the cycle instead of failing the partition; Guardian version misses &lt; 10m return transient <code>Unavailable</code></td>
+            </tr>
+            <tr>
+              <td><strong>Doctor WAL or pipeline saturated</strong></td>
+              <td>Ingest reaches configured memory/segment limits</td>
+              <td>Returns HTTP <code>429</code> / gRPC <code>ResourceExhausted</code> backpressure; local <code>fsync</code> WAL replays buffered batches on restart</td>
+            </tr>
+            <tr>
+              <td><strong>Remote federation target down / 401</strong></td>
+              <td>Subset of AWS/GCP targets slow, unreachable, or rotated</td>
+              <td>401 triggers token invalidate + <code>singleflight</code> retry; 2 consecutive errors open 15s breaker; response returns partial data + <code>X-Doctor-Partial</code> header</td>
+            </tr>
+            <tr>
+              <td><strong>KVS quorum lost</strong></td>
+              <td><code>guardian-system</code> queues and config mutations pause</td>
+              <td>Normal MonoFS file reads and OCI v2 registry writes continue unaffected on healthy storage nodes</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-repo workspace push fails mid-way</strong></td>
+              <td>One upstream repo rejects push after earlier repos succeeded</td>
+              <td>Fetcher creates revert commits (never force-pushes) and reports exact per-repository status back to the session</td>
+            </tr>
+            <tr>
+              <td><strong>LB-Edge registry restarts empty</strong></td>
+              <td>Proxy receives an empty valid snapshot and drains routes</td>
+              <td><code>k8s-agent</code> informer resync (30s) re-registers all annotated Endpoints; edge static routes re-seed on process start</td>
+            </tr>
+            <tr>
+              <td><strong>Shared ClickHouse legacy fan-out</strong></td>
+              <td>Scanning storage replicas would duplicate shared rows</td>
+              <td>Legacy node fan-out explicitly returns <code>Unimplemented</code>; policy-routed ClickHouse placements route once via <code>MultiResolver</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- KNOWN BOUNDARIES -->
+  <section class="section" id="boundaries">
+    <div class="wrap">
+      <div class="callout-honest reveal" data-tone="violet">
+        <span class="callout-kicker">Documented Boundaries &amp; Non-Goals</span>
+        <h3>Explicit limits in the current codebase</h3>
+        <ul>
+          <li><strong>FUSE vs headless workspace:</strong> The FUSE projection is a practical POSIX subset with limited locking and <code>mmap</code> semantics. Containers without <code>/dev/fuse</code> should run <code>monofs-client --headless</code>. An experimental C kernel module exists in-repo but is not the supported path.</li>
+          <li><strong>Guardian rollbacks &amp; CDK units:</strong> Failed applies record <code>rollbackTo</code>/<code>rollbackReason</code> and preserve the pushed desired manifest for retry — restoring an older archive tag is an explicit operator command. CDK-expressible intents collapse into one stack asset unit.</li>
+          <li><strong>LB-Edge is L4 TCP only:</strong> No HTTP path routing, SNI termination, or active health probes beyond the 3-dial-failure passive circuit breaker.</li>
+          <li><strong>Observability access control scope:</strong> Logs, traces, and federated SQL enforce per-partition compiled ACLs; metrics remain intentionally platform-visible without per-tenant row filtering.</li>
+        </ul>
+      </div>
+
+      <div class="cta-actions reveal" style="margin-top: 40px; justify-content: flex-start;">
+        <a class="btn btn-primary" href="/systems/">Explore All 13 Repositories <span class="btn-arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/benchmarks/">Inspect Benchmark Numbers <span class="btn-arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/security/">Read Security Hardening <span class="btn-arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="/" aria-label="Strata home">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+          <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+        </svg>
+        <span class="brand-word">STRATA</span>
+        <span class="brand-sub">/ OSS</span>
+      </a>
+      <p>Open-source (Apache-2.0) systems infrastructure engineered in the open by <a href="https://github.com/radryc" target="_blank" rel="noopener">@radryc</a>. 13 public repositories · 5 connected planes · 734 test files.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <div>
+        <span class="footer-head">Hub Pages</span>
+        <a href="/">Overview</a>
+        <a href="/architecture/">Architecture</a>
+        <a href="/systems/">13 Repositories</a>
+        <a href="/benchmarks/">Benchmark Lab</a>
+        <a href="/security/">Security &amp; Privacy</a>
+        <a href="/#quickstart">Local Bootstrap</a>
+      </div>
+      <div>
+        <span class="footer-head">Core Planes</span>
+        <a href="https://github.com/radryc/strata" target="_blank" rel="noopener">Strata Umbrella</a>
+        <a href="https://github.com/radryc/monofs" target="_blank" rel="noopener">MonoFS</a>
+        <a href="https://github.com/radryc/guardian" target="_blank" rel="noopener">Guardian</a>
+        <a href="https://github.com/radryc/doctor" target="_blank" rel="noopener">Doctor</a>
+        <a href="https://github.com/radryc/lb" target="_blank" rel="noopener">LB-Edge</a>
+        <a href="https://github.com/radryc/agent" target="_blank" rel="noopener">Agent</a>
+      </div>
+      <div>
+        <span class="footer-head">Primitives &amp; Tools</span>
+        <a href="https://github.com/radryc/sqlagregator" target="_blank" rel="noopener">sqlagregator</a>
+        <a href="https://github.com/radryc/cfg" target="_blank" rel="noopener">cfg</a>
+        <a href="https://github.com/radryc/kvs" target="_blank" rel="noopener">kvs (Raft KV)</a>
+        <a href="https://github.com/radryc/packager" target="_blank" rel="noopener">packager</a>
+        <a href="https://github.com/radryc/tlsx" target="_blank" rel="noopener">tlsx (SPIFFE mTLS)</a>
+        <a href="https://github.com/radryc?tab=repositories" target="_blank" rel="noopener">all public repos ↗</a>
+      </div>
+    </nav>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© <span id="year">2026</span> Strata · open source · Apache-2.0 · <time datetime="2026-11-23">last updated 23 Nov 2026</time></span>
+    <span class="footer-status"><i></i> Built in public · 13 repos · @radryc</span>
+  </div>
+</footer>
+
+<script src="/assets/app.js?v=2026-11-23a" defer></script>
+</body>
+</html>

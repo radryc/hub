@@ -102,14 +102,14 @@
           }
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0.02, rootMargin: '0px 0px -10px 0px' }
     );
     reveals.forEach((el) => revealObserver.observe(el));
   }
 
-  /* Active section in nav */
+  /* Active section in nav & subnav */
   const sections = $$('main section[id]');
-  const navAnchors = $$('.nav-links a[href^="#"]');
+  const navAnchors = $$('.nav-links a[href^="#"], .subnav a[href^="#"]');
 
   if ('IntersectionObserver' in window && sections.length && navAnchors.length) {
     const activeObserver = new IntersectionObserver(
@@ -122,7 +122,7 @@
           });
         });
       },
-      { rootMargin: '-35% 0px -55% 0px' }
+      { rootMargin: '-28% 0px -60% 0px' }
     );
     sections.forEach((section) => activeObserver.observe(section));
   }
@@ -276,6 +276,53 @@
     });
   }
 
+  /* Generic [data-copy] buttons on standalone snippets */
+  $$('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const card = btn.closest('.snippet-card, .quickstart-panel, .code-panel') || btn.parentElement;
+      const code = card ? $('pre code', card) : null;
+      if (!code) return;
+
+      await copyText(code.innerText);
+      btn.textContent = 'Copied';
+      btn.classList.add('is-copied');
+      window.setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('is-copied');
+      }, 1800);
+    });
+  });
+
+  /* Filterable grids (e.g., 17-repository directory on /systems/) */
+  $$('[data-filter-group]').forEach((group) => {
+    const scope = group.closest('section') || document;
+    const buttons = $$('[data-filter]', group);
+    const items = $$('[data-filter-item]', scope);
+    const counter = $('[data-filter-count]', scope);
+
+    const applyFilter = (cat) => {
+      let visible = 0;
+      items.forEach((item) => {
+        const cats = (item.dataset.filterItem || '').split(/\s+/);
+        const match = cat === 'all' || cats.includes(cat);
+        item.hidden = !match;
+        if (match) visible += 1;
+      });
+      buttons.forEach((b) => {
+        const active = b.dataset.filter === cat;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-pressed', String(active));
+      });
+      if (counter) {
+        counter.textContent = `Showing ${visible} of ${items.length} repositories`;
+      }
+    };
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => applyFilter(btn.dataset.filter || 'all'));
+    });
+  });
+
   /* Pointer spotlight (desktop, fine pointers only) */
   const glow = $('#cursorGlow');
   const finePointer = window.matchMedia('(pointer: fine)').matches;
@@ -337,4 +384,40 @@
       ticker.style.animationPlayState = document.hidden ? 'paused' : 'running';
     });
   }
+
+  /* Contact form (static mailto builder + email copy) */
+  const contactForm = $('#contactForm');
+  const contactStatus = $('#contactStatus');
+  if (contactForm) {
+    contactForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const to = contactForm.dataset.contactEmail || 'radryc@sretoolhub.com';
+      const fd = new FormData(contactForm);
+      const name = String(fd.get('name') || '').trim();
+      const email = String(fd.get('email') || '').trim();
+      const subject = String(fd.get('subject') || 'Strata inquiry').trim();
+      const message = String(fd.get('message') || '').trim();
+      const body = `From: ${name} <${email}>\n\n${message}`;
+      const href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = href;
+      if (contactStatus) {
+        contactStatus.textContent = `Opening mail client for ${to}...`;
+      }
+    });
+  }
+
+  $$('[data-copy-email]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const addr = btn.dataset.copyEmail || '';
+      if (!addr) return;
+      const orig = btn.textContent;
+      try {
+        await navigator.clipboard.writeText(addr);
+        btn.textContent = 'Copied!';
+      } catch {
+        btn.textContent = addr;
+      }
+      setTimeout(() => { btn.textContent = orig; }, 1600);
+    });
+  });
 })();
