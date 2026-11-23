@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchmark Lab — Strata</title>
+<meta name="description" content="Measured performance across Strata: 15.1k read &amp; 56.3k metadata ops/s on MonoFS, 14.3k ops/s LB-Edge TCP proxy, 43.8k rec/s Doctor OTLP ingest, 150k-target chaos budgets, and standalone nzip R&amp;D codec benchmarks.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="author" content="radryc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060a14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6fa">
+<link rel="canonical" href="https://stratasre.com/benchmarks/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Strata">
+<meta property="og:url" content="https://stratasre.com/benchmarks/">
+<meta property="og:title" content="Benchmark Lab — Strata">
+<meta property="og:description" content="Measured throughput and latency matrices, 2.18M-op soak results, 150k-target chaos budgets, and standalone nzip R&amp;D codec benchmarks.">
+<meta property="og:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Benchmark Lab — Strata">
+<meta name="twitter:description" content="15.1k read &amp; 56.3k meta ops/s, 14.3k ops/s LB-Edge, 43.8k rec/s OTLP ingest, and 150k-target federation chaos.">
+<meta name="twitter:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/assets/theme.js?v=2026-11-23a"></script>
+<link rel="stylesheet" href="/assets/style.css?v=2026-11-23b">
+<noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Strata Benchmark Lab — Measured Throughput, Latency & Saturation Numbers",
+  "description": "Measured performance results across MonoFS, KVS, LB-Edge, Doctor, Agent, 150k-target federation chaos suites, and standalone nzip R&D codec benchmarks.",
+  "url": "https://stratasre.com/benchmarks/",
+  "dateModified": "2026-11-23",
+  "author": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" },
+  "publisher": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" }
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="Strata home">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+        <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+      </svg>
+      <span class="brand-word">STRATA</span>
+      <span class="brand-sub">/ OSS</span>
+    </a>
+
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="/">Overview</a>
+      <a href="/architecture/">Architecture</a>
+      <a href="/systems/">Systems</a>
+      <a href="/benchmarks/" aria-current="page">Benchmarks</a>
+      <a href="/security/">Security</a>
+      <a href="/#about">About</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <svg class="theme-icon theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg class="theme-icon theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>
+        </svg>
+      </button>
+      <a class="btn btn-ghost btn-sm nav-github" href="https://github.com/radryc/strata" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="subhero" id="top">
+    <div class="hero-aurora" aria-hidden="true"></div>
+    <div class="wrap">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Overview</a><span aria-hidden="true">/</span><span>Benchmarks</span>
+      </nav>
+      <p class="eyebrow"><span class="pulse-dot"></span> Measured performance lab</p>
+      <h1>Measured throughput,<br><span class="grad">latency &amp; saturation.</span></h1>
+      <p class="subhero-lead">Direct numbers from in-cluster <code>monofs-loadgen</code> and <code>doctor-loadgen</code> runs on a 3-node Kubernetes cluster (32-vCPU host), gated <code>DOCTOR_LOADTEST=1</code> 150k-target chaos suites, plus standalone <code>nzip</code> R&amp;D codec benchmarks.</p>
+
+      <div class="subhero-stats">
+        <div class="subhero-stat">
+          <b>15,123 / s</b>
+          <span>4 KiB MonoFS reads · c=128</span>
+        </div>
+        <div class="subhero-stat">
+          <b>56,329 / s</b>
+          <span>Metadata ops/s · c=64 · p99 4.39 ms</span>
+        </div>
+        <div class="subhero-stat">
+          <b>43,800 / s</b>
+          <span>Doctor OTLP ingest saturation</span>
+        </div>
+        <div class="subhero-stat">
+          <b>14,270 / s</b>
+          <span>LB-Edge L4 TCP proxy · p99 11.5 ms</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="subnav-wrap">
+    <div class="wrap">
+      <nav class="subnav" aria-label="Benchmark sections">
+        <a href="#throughput" class="is-active">Subsystem Summary</a>
+        <a href="#matrix">Cluster Matrix</a>
+        <a href="#federation">150k Chaos</a>
+        <a href="#nzip">nzip (R&amp;D)</a>
+        <a href="#hotspots">Ceilings &amp; Limits</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- SUBSYSTEM SUMMARY -->
+  <section class="section" id="throughput">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Per-plane measured numbers</p>
+          <h2 class="reveal">Throughput &amp; tail latency<br><span class="dim">across every plane.</span></h2>
+        </div>
+        <p class="section-lead reveal">Measured on a 3-node <code>kind-strata</code> cluster (32-vCPU host) with direct gRPC and LB-Edge proxy paths active and OTLP instrumentation enabled.</p>
+      </div>
+
+      <div class="bench-card reveal" style="margin-bottom: 24px;">
+        <div class="bench-card-head">
+          <h3>MonoFS 4 KiB Read Concurrency Scaling &amp; LB-Edge Path</h3>
+          <span>ops/s on 3-node cluster · p50 to p99 latencies</span>
+        </div>
+        <div class="bench-bars">
+          <div class="bench-bar-row">
+            <span class="bench-bar-label">Direct Read, c=1</span>
+            <div class="bench-track"><div class="bench-fill" style="--w: 3.9%;"></div></div>
+            <span class="bench-val">582 ops/s · p99 3.3 ms</span>
+          </div>
+          <div class="bench-bar-row">
+            <span class="bench-bar-label">Direct Read, c=4</span>
+            <div class="bench-track"><div class="bench-fill" style="--w: 13.5%;"></div></div>
+            <span class="bench-val">2,041 ops/s · p99 3.8 ms</span>
+          </div>
+          <div class="bench-bar-row">
+            <span class="bench-bar-label">Direct Read, c=16</span>
+            <div class="bench-track"><div class="bench-fill" style="--w: 44.4%;"></div></div>
+            <span class="bench-val">6,712 ops/s · p99 5.8 ms</span>
+          </div>
+          <div class="bench-bar-row">
+            <span class="bench-bar-label">Direct Read, c=64</span>
+            <div class="bench-track"><div class="bench-fill" style="--w: 91.8%;"></div></div>
+            <span class="bench-val">13,890 ops/s · p95 9.0 ms</span>
+          </div>
+          <div class="bench-bar-row is-winner">
+            <span class="bench-bar-label">LB-Edge Proxy, c=64</span>
+            <div class="bench-track"><div class="bench-fill" style="--w: 94.4%;"></div></div>
+            <span class="bench-val">14,270 ops/s · p99 11.5 ms</span>
+          </div>
+          <div class="bench-bar-row is-winner">
+            <span class="bench-bar-label">Direct Read, c=128</span>
+            <div class="bench-track"><div class="bench-fill" style="--w: 100%;"></div></div>
+            <span class="bench-val">15,123 ops/s · p99 22.3 ms</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap reveal">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Subsystem</th>
+              <th>Workload</th>
+              <th style="text-align: right;">Throughput</th>
+              <th style="text-align: right;">Latency</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="is-highlight">
+              <td><strong>MonoFS</strong></td>
+              <td>4 KiB Read, c=128 (cluster)</td>
+              <td class="num">15,123 ops/s</td>
+              <td class="num">p50 7.02 ms · p99 22.34 ms</td>
+              <td>~17k ops/s per node @ 8–10 ms p99</td>
+            </tr>
+            <tr class="is-highlight">
+              <td><strong>MonoFS</strong></td>
+              <td>Metadata, c=64</td>
+              <td class="num">56,329 ops/s</td>
+              <td class="num">p50 0.87 ms · p99 4.39 ms</td>
+              <td><code>getattr</code> p95 0.69 ms · <code>readdir</code> p95 0.47 ms</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS</strong></td>
+              <td>Batch Ingest (1,000 files/batch)</td>
+              <td class="num">≈284k files/s</td>
+              <td class="num">p50 27.22 ms · p99 54.07 ms</td>
+              <td>284 batches/s across HRW Pebble nodes</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS</strong></td>
+              <td>1 MiB Large-Blob Read, c=16</td>
+              <td class="num">192 ops/s (192 MB/s)</td>
+              <td class="num">p95 149 ms</td>
+              <td>Range-cached fetcher read-through (4 KiB c=64 hits 13,890 ops/s @ p95 9.0 ms)</td>
+            </tr>
+            <tr>
+              <td><strong>KVS (Raft)</strong></td>
+              <td><code>read_file</code> · <code>stat</code> · <code>list_dir</code></td>
+              <td class="num">sub-ms p95</td>
+              <td class="num">0.28 · 0.23 · 0.27–0.72 ms</td>
+              <td>Prefix-indexed directory pagination</td>
+            </tr>
+            <tr class="is-highlight">
+              <td><strong>LB-Edge</strong></td>
+              <td>L4 TCP Proxy, Read c=64</td>
+              <td class="num">14,270 ops/s</td>
+              <td class="num">p50 4.05 ms · p99 11.46 ms</td>
+              <td>Zero proxy bottleneck vs direct gRPC</td>
+            </tr>
+            <tr>
+              <td><strong>Doctor Ingest</strong></td>
+              <td>OTLP Logs (batch 200)</td>
+              <td class="num">43,800 rec/s</td>
+              <td class="num">p95 34 ms @ 20k · 210.7 ms peak</td>
+              <td>Pre-WAL HMAC tokenization active</td>
+            </tr>
+            <tr>
+              <td><strong>Doctor Query</strong></td>
+              <td>PromQL (1k / 2k offered RPS)</td>
+              <td class="num">1,005 / 1,888 ops/s</td>
+              <td class="num">p95 22 ms / 54 ms</td>
+              <td>Singleflight dedup · 716 ops/s (p95 187 ms) on 5 varied queries</td>
+            </tr>
+            <tr>
+              <td><strong>Doctor Guardrails</strong></td>
+              <td>Range Cap &amp; Client Cancel</td>
+              <td class="num">~1 ms reject (11k pts)</td>
+              <td class="num">&lt; 1s drain to 0 inflight</td>
+              <td>30d/1s rejected HTTP 400; <code>up</code> instant query ~30 ms</td>
+            </tr>
+            <tr>
+              <td><strong>Agent</strong></td>
+              <td><code>/api/health</code> &amp; <code>/api/ready</code></td>
+              <td class="num">499 / 50 RPS</td>
+              <td class="num">p50 9.3 ms / 3.6 ms</td>
+              <td>p95 25.9 ms on cached health endpoint</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLUSTER PERFORMANCE MATRIX -->
+  <section class="section" id="matrix">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Full-stack matrix · kind-strata</p>
+          <h2 class="reveal">Load, Soak &amp;<br><span class="dim">Recovery Matrix.</span></h2>
+        </div>
+        <p class="section-lead reveal">Warm-up 5s, measurement window 10s per point, plus a 3-minute continuous mixed soak (2.18M ops) and post-failover recovery check.</p>
+      </div>
+
+      <div class="table-wrap reveal" style="margin-bottom: 24px;">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Workload</th>
+              <th style="text-align: right;">Throughput</th>
+              <th style="text-align: right;">p50</th>
+              <th style="text-align: right;">p95</th>
+              <th style="text-align: right;">p99</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>MonoFS Read 4 KiB, c=1</strong></td>
+              <td class="num">582 ops/s</td><td class="num">1.62 ms</td><td class="num">2.62 ms</td><td class="num">3.31 ms</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS Read 4 KiB, c=16</strong></td>
+              <td class="num">6,712 ops/s</td><td class="num">2.18 ms</td><td class="num">4.00 ms</td><td class="num">5.81 ms</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS Read 4 KiB, c=64</strong></td>
+              <td class="num">11,628 ops/s</td><td class="num">4.31 ms</td><td class="num">10.27 ms</td><td class="num">15.02 ms</td>
+            </tr>
+            <tr class="is-highlight">
+              <td><strong>MonoFS Read 4 KiB, c=128</strong></td>
+              <td class="num">15,123 ops/s</td><td class="num">7.02 ms</td><td class="num">16.18 ms</td><td class="num">22.34 ms</td>
+            </tr>
+            <tr class="is-highlight">
+              <td><strong>LB-Edge Proxy Path (Read c=64)</strong></td>
+              <td class="num">14,270 ops/s</td><td class="num">4.05 ms</td><td class="num">8.15 ms</td><td class="num">11.46 ms</td>
+            </tr>
+            <tr class="is-highlight">
+              <td><strong>MonoFS Metadata, c=64</strong></td>
+              <td class="num">56,329 ops/s</td><td class="num">0.87 ms</td><td class="num">2.74 ms</td><td class="num">4.39 ms</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS Ingest, batch 100</strong></td>
+              <td class="num">808 batches/s (≈80.8k files/s)</td><td class="num">8.96 ms</td><td class="num">18.11 ms</td><td class="num">41.28 ms</td>
+            </tr>
+            <tr>
+              <td><strong>MonoFS Ingest, batch 1000</strong></td>
+              <td class="num">284 batches/s (≈284k files/s)</td><td class="num">27.22 ms</td><td class="num">42.11 ms</td><td class="num">54.07 ms</td>
+            </tr>
+            <tr>
+              <td><strong>Mixed 80/20 Soak (3 min · 2.18M ops)</strong></td>
+              <td class="num">12,135 ops/s</td><td class="num">2.31 ms</td><td class="num">5.14 ms</td><td class="num">8.19 ms</td>
+            </tr>
+            <tr>
+              <td><strong>Post-Failover Recovery (<code>node-c</code> restarted)</strong></td>
+              <td class="num">13,016 ops/s</td><td class="num">2.27 ms</td><td class="num">4.12 ms</td><td class="num">5.72 ms</td>
+            </tr>
+            <tr>
+              <td><strong>Doctor OTLP Ingest (5k target)</strong></td>
+              <td class="num">4,800 rec/s</td><td class="num">14.90 ms</td><td class="num">39.93 ms</td><td class="num">57.34 ms</td>
+            </tr>
+            <tr>
+              <td><strong>Doctor OTLP Ingest (20k target)</strong></td>
+              <td class="num">20,000 rec/s</td><td class="num">26.84 ms</td><td class="num">51.72 ms</td><td class="num">108.15 ms</td>
+            </tr>
+            <tr>
+              <td><strong>Doctor OTLP Ingest (50k saturation)</strong></td>
+              <td class="num">43,800 rec/s</td><td class="num">113.02 ms</td><td class="num">210.66 ms</td><td class="num">306.59 ms</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fine-print reveal" style="margin-top: 0; border-top: 0; padding-top: 0;">Post-failover recovery ran at 13,016 ops/s after <code>node-c</code> returned. Per-node CPU throttling under steady-state load stays at <strong>0.004 cores/s</strong>.</p>
+    </div>
+  </section>
+
+  <!-- 150K FEDERATION CHAOS BUDGETS -->
+  <section class="section" id="federation">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">50k pushers · 150k targets</p>
+          <h2 class="reveal">Scale &amp; Chaos<br><span class="dim">Test Budgets.</span></h2>
+        </div>
+        <p class="section-lead reveal">Hard performance and chaos invariants enforced in CI via <code>DOCTOR_LOADTEST=1</code> and <code>MONOFS_LOADTEST=1</code>.</p>
+      </div>
+
+      <div class="table-wrap reveal">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Test Suite</th>
+              <th>Scale / Fault Injection</th>
+              <th style="text-align: right;">Enforced Budget</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TestFederationPlanner150kBudget</code></td>
+              <td>150,000 targets · linear catalog sort/dedup + scoped query planner</td>
+              <td class="num"><span class="badge badge-accent">Build &lt; 5s · p99 &lt; 5 ms · Heap &lt; 2 GB</span></td>
+            </tr>
+            <tr>
+              <td><code>TestMonoFSSnapshotStore300ShardsBudget</code></td>
+              <td>300 SHA-256 verified shards saved &amp; loaded across 16 workers</td>
+              <td class="num"><span class="badge badge-accent">Load &lt; 10s</span></td>
+            </tr>
+            <tr>
+              <td><code>TestPartitionForAWS50kLookupBudget</code></td>
+              <td>50,000 compiled AWS policy bindings × 1,000,000 lookups</td>
+              <td class="num"><span class="badge badge-accent">&lt; 2s total</span></td>
+            </tr>
+            <tr>
+              <td><code>TestFederationFanoutChaos</code></td>
+              <td>32 targets × 100 concurrent queries (30% err, 10% slow, 5% throttled)</td>
+              <td class="num"><span class="badge badge-accent">&lt; 15s · ≤ 64 inflight · partial warnings</span></td>
+            </tr>
+            <tr>
+              <td><code>TestFederationTokenBundle50k</code></td>
+              <td>50,000 pusher tokens across 256 AES-256-GCM encrypted shards</td>
+              <td class="num"><span class="badge badge-gain">Zero leaked tokens · lazy load</span></td>
+            </tr>
+            <tr>
+              <td><code>TestFederationReloadUnderLoad</code></td>
+              <td>Atomic catalog hot-swaps under concurrent query storm</td>
+              <td class="num"><span class="badge badge-gain">Zero mixed-planner reads</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- NZIP BENCHMARKS & ABLATION -->
+  <section class="section" id="nzip">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Standalone R&amp;D · nzip codec (not yet integrated into Strata)</p>
+          <h2 class="reveal">Standalone codec R&amp;D<br><span class="dim">vs standard compressors.</span></h2>
+        </div>
+        <p class="section-lead reveal">Experimental standalone deterministic codec — <strong>not yet wired into Doctor or MonoFS runtime</strong> (<code>stream.Writer</code>/<code>stream.Reader</code> is the planned integration seam). Measured compressing raw uncompressed OTel/JSON spans (7.4 MB holdout, 20,000 spans with ~25% irreducible hex IDs) at <strong>13.2 MB/s</strong> across 32 threads (<strong>0.99 MB/s/core</strong> encode, <strong>0.94 MB/s/core</strong> decode at H=32 in <code>go test -bench ./codec</code> on i9-13900KF).</p>
+      </div>
+
+      <div class="table-wrap reveal" style="margin-bottom: 24px;">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th><code>go test -bench ./codec</code> (1 MiB Raw OTel/JSON Spans)</th>
+              <th style="text-align: right;">Compress (1 Core)</th>
+              <th style="text-align: right;">Decompress (1 Core)</th>
+              <th>Profile / Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong><code>H=16</code> (GRU + Context + Arithmetic Coder)</strong></td>
+              <td class="num">1.53 MB/s</td>
+              <td class="num">1.50 MB/s</td>
+              <td>Fastest neural profile for homogeneous OTel schemas</td>
+            </tr>
+            <tr class="is-highlight">
+              <td><strong><code>H=32</code> (Default Balanced Neural Profile)</strong></td>
+              <td class="num">0.99 MB/s</td>
+              <td class="num">0.94 MB/s</td>
+              <td><strong>13.2 MB/s</strong> parallel across 32 threads on 7.4 MB holdout</td>
+            </tr>
+            <tr>
+              <td><strong><code>H=64</code> (Archival Neural Profile)</strong></td>
+              <td class="num">0.54 MB/s</td>
+              <td class="num">0.52 MB/s</td>
+              <td>Higher hidden capacity for mixed/diverse attribute sets</td>
+            </tr>
+            <tr>
+              <td><strong><code>MatchOnly</code> (No GRU)</strong></td>
+              <td class="num">3.16 MB/s</td>
+              <td class="num">—</td>
+              <td>Match model + arithmetic coder baseline on 1 MiB OTel JSON</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="two-col" style="margin-bottom: 24px;">
+        <div class="bench-card reveal">
+          <div class="bench-card-head">
+            <h3>7.4 MB OTel/JSON Holdout (Smaller is Better)</h3>
+            <span>20,000 spans · nzip H=32, blocks</span>
+          </div>
+          <div class="bench-bars">
+            <div class="bench-bar-row is-winner">
+              <span class="bench-bar-label">nzip H=32 (blocks)</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 77.3%;"></div></div>
+              <span class="bench-val">611,579 B · 0.66 bpb</span>
+            </div>
+            <div class="bench-bar-row">
+              <span class="bench-bar-label">bzip2 -9</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 81.2%;"></div></div>
+              <span class="bench-val">642,858 B · 0.69 bpb</span>
+            </div>
+            <div class="bench-bar-row">
+              <span class="bench-bar-label">zstd -19 --long</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 84.3%;"></div></div>
+              <span class="bench-val">667,324 B · 0.72 bpb</span>
+            </div>
+            <div class="bench-bar-row">
+              <span class="bench-bar-label">xz -9e</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 84.7%;"></div></div>
+              <span class="bench-val">670,440 B · 0.72 bpb</span>
+            </div>
+            <div class="bench-bar-row is-baseline">
+              <span class="bench-bar-label">gzip -9</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 100%;"></div></div>
+              <span class="bench-val">791,211 B · 0.85 bpb</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bench-card reveal">
+          <div class="bench-card-head">
+            <h3>20 Generated Images (2.79 MB, Auto Stride)</h3>
+            <span>nzip auto-selects row delta / Paeth predictor</span>
+          </div>
+          <div class="bench-bars">
+            <div class="bench-bar-row is-winner">
+              <span class="bench-bar-label">nzip (image profile)</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 70.4%;"></div></div>
+              <span class="bench-val">1,683,407 B · 0.603</span>
+            </div>
+            <div class="bench-bar-row">
+              <span class="bench-bar-label">xz -9e</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 85.3%;"></div></div>
+              <span class="bench-val">2,039,208 B · 0.731</span>
+            </div>
+            <div class="bench-bar-row">
+              <span class="bench-bar-label">bzip2 -9</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 86.4%;"></div></div>
+              <span class="bench-val">2,065,021 B · 0.740</span>
+            </div>
+            <div class="bench-bar-row">
+              <span class="bench-bar-label">gzip -9</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 99.3%;"></div></div>
+              <span class="bench-val">2,374,956 B · 0.851</span>
+            </div>
+            <div class="bench-bar-row is-baseline">
+              <span class="bench-bar-label">zstd -19</span>
+              <div class="bench-track"><div class="bench-fill" style="--w: 100%;"></div></div>
+              <span class="bench-val">2,391,291 B · 0.857</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="table-wrap reveal">
+          <table class="spec-table">
+            <thead>
+              <tr>
+                <th>1 MB Slice Predictor Ablation</th>
+                <th style="text-align: right;">Bytes</th>
+                <th style="text-align: right;">Bits/Byte</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="is-highlight">
+                <td><strong>full (gru + match + table + run)</strong></td>
+                <td class="num">84,850</td><td class="num">0.679</td>
+              </tr>
+              <tr>
+                <td><code>gru + match + run</code></td>
+                <td class="num">86,542</td><td class="num">0.692</td>
+              </tr>
+              <tr>
+                <td><code>gru + table + run</code></td>
+                <td class="num">89,628</td><td class="num">0.717</td>
+              </tr>
+              <tr>
+                <td><strong>gzip -9 (reference)</strong></td>
+                <td class="num">97,673</td><td class="num">0.781</td>
+              </tr>
+              <tr>
+                <td><code>match + table + run</code> (no GRU)</td>
+                <td class="num">97,788</td><td class="num">0.782</td>
+              </tr>
+              <tr>
+                <td><code>gru only</code></td>
+                <td class="num">112,409</td><td class="num">0.899</td>
+              </tr>
+              <tr>
+                <td><code>match only</code></td>
+                <td class="num">158,233</td><td class="num">1.266</td>
+              </tr>
+              <tr>
+                <td><code>table only</code> (order-2)</td>
+                <td class="num">180,284</td><td class="num">1.442</td>
+              </tr>
+              <tr>
+                <td><code>run only</code></td>
+                <td class="num">538,355</td><td class="num">4.307</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <article class="spec-card reveal" data-accent="violet">
+          <span class="spec-kicker">1 GB enwik9 &amp; Small-Batch Numbers</span>
+          <h3>Out-of-domain &amp; streaming results</h3>
+          <p>On the 1 GB Hutter Prize corpus (<code>enwik9</code>, trained on a 32 MB <code>enwik8</code> prefix), <code>nzip (H=32)</code> finished in <strong>2m 41s</strong> at 2.1 GB RSS (6.2 MB/s):</p>
+          <ul class="spec-list">
+            <li><strong>nzip:</strong> <code>249,465,417 B</code> (0.2495) — smaller than <code>bzip2 -9</code> (254.0 MB) and <code>gzip -9</code> (322.6 MB).</li>
+            <li><strong>Reference gap:</strong> <code>xz -9e</code> reaches 211.8 MB and the 2026 Hutter record <code>fx2-cmix-T</code> reaches 100.4 MB (2.48×) because natural-language prose rewards order 4–8 contexts.</li>
+            <li><strong>Small telemetry batches:</strong> <code>session</code> mode packs 64×2 KB batches into <strong>7.2 KB</strong> (vs 18.2 KB independent blocks); an 8 KiB dictionary compresses a 50 KB stream to <strong>4.0%</strong>; a 137 KB gradient BMP packs to <strong>87 bytes</strong>.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEASURED CEILINGS & KNOWN HOTSPOTS -->
+  <section class="section" id="hotspots">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Operational honesty</p>
+        <h2 class="reveal">Measured ceilings &amp;<br><span class="dim">open hotspots.</span></h2>
+      </div>
+
+      <div class="callout-honest reveal" data-tone="amber">
+        <span class="callout-kicker">Current Bottlenecks &amp; Saturation Limits</span>
+        <h3>Where the stack currently hits physical ceilings</h3>
+        <ul>
+          <li><strong>Doctor OTLP ingest ceiling (~43.8k rec/s):</strong> Sustains 20,000 rec/s at p95 34 ms and saturates near 43,800 rec/s (p95 210.7 ms) bound by downstream ClickHouse write throughput.</li>
+          <li><strong>1 MiB large-blob tail latency:</strong> Range-cached 1 MiB reads run at 192 ops/s (192 MB/s, p95 149 ms), while stale missing <code>.state</code> blobs can still produce p99 outliers on cold S3 lookups.</li>
+          <li><strong>Scoped federation cap (32 targets/query):</strong> Live multi-account fan-out caps at 32 targets per query and 64 global inflight requests; broad unscoped fleet queries return HTTP <code>422</code> by design.</li>
+        </ul>
+      </div>
+
+      <div class="cta-actions reveal" style="margin-top: 40px; justify-content: flex-start;">
+        <a class="btn btn-primary" href="/security/">Inspect Security &amp; Privacy Funnel <span class="btn-arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/architecture/">Read Failure Playbook <span class="btn-arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="https://github.com/radryc/strata" target="_blank" rel="noopener">Browse Source on GitHub <span class="btn-arrow" aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="/" aria-label="Strata home">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+          <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+        </svg>
+        <span class="brand-word">STRATA</span>
+        <span class="brand-sub">/ OSS</span>
+      </a>
+      <p>Open-source (Apache-2.0) systems infrastructure engineered in the open by <a href="https://github.com/radryc" target="_blank" rel="noopener">@radryc</a>. 13 public repositories · 5 connected planes · 734 test files.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <div>
+        <span class="footer-head">Hub Pages</span>
+        <a href="/">Overview</a>
+        <a href="/architecture/">Architecture</a>
+        <a href="/systems/">13 Repositories</a>
+        <a href="/benchmarks/">Benchmark Lab</a>
+        <a href="/security/">Security &amp; Privacy</a>
+        <a href="/#quickstart">Local Bootstrap</a>
+      </div>
+      <div>
+        <span class="footer-head">Core Planes</span>
+        <a href="https://github.com/radryc/strata" target="_blank" rel="noopener">Strata Umbrella</a>
+        <a href="https://github.com/radryc/monofs" target="_blank" rel="noopener">MonoFS</a>
+        <a href="https://github.com/radryc/guardian" target="_blank" rel="noopener">Guardian</a>
+        <a href="https://github.com/radryc/doctor" target="_blank" rel="noopener">Doctor</a>
+        <a href="https://github.com/radryc/lb" target="_blank" rel="noopener">LB-Edge</a>
+        <a href="https://github.com/radryc/agent" target="_blank" rel="noopener">Agent</a>
+      </div>
+      <div>
+        <span class="footer-head">Primitives &amp; Tools</span>
+        <a href="https://github.com/radryc/sqlagregator" target="_blank" rel="noopener">sqlagregator</a>
+        <a href="https://github.com/radryc/cfg" target="_blank" rel="noopener">cfg</a>
+        <a href="https://github.com/radryc/kvs" target="_blank" rel="noopener">kvs (Raft KV)</a>
+        <a href="https://github.com/radryc/packager" target="_blank" rel="noopener">packager</a>
+        <a href="https://github.com/radryc/tlsx" target="_blank" rel="noopener">tlsx (SPIFFE mTLS)</a>
+        <a href="https://github.com/radryc?tab=repositories" target="_blank" rel="noopener">all public repos ↗</a>
+      </div>
+    </nav>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© <span id="year">2026</span> Strata · open source · Apache-2.0 · <time datetime="2026-11-23">last updated 23 Nov 2026</time></span>
+    <span class="footer-status"><i></i> Built in public · 13 repos · @radryc</span>
+  </div>
+</footer>
+
+<script src="/assets/app.js?v=2026-11-23a" defer></script>
+</body>
+</html>

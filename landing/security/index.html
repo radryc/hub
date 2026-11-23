@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security, Privacy &amp; Hardening — Strata</title>
+<meta name="description" content="Strata security architecture: pre-WAL PII/PCI HMAC tokenization, SPIFFE hot-reload mTLS (tlsx), ChaCha20/AES-256-GCM envelope encryption, compiled RBAC, SSRF netguard, and hash-chained audit ledgers.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="author" content="radryc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060a14">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6fa">
+<link rel="canonical" href="https://stratasre.com/security/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Strata">
+<meta property="og:url" content="https://stratasre.com/security/">
+<meta property="og:title" content="Security, Privacy &amp; Hardening — Strata">
+<meta property="og:description" content="Pre-WAL HMAC privacy funnel, SPIFFE mTLS leaf hot-reloading, ChaCha20-Poly1305 &amp; AES-256-GCM encryption, fail-closed SQL/RBAC, and SSRF protection.">
+<meta property="og:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Security, Privacy &amp; Hardening — Strata">
+<meta name="twitter:description" content="Pre-WAL PII/PCI redaction, SPIFFE mTLS, ChaCha20 archives, compiled RBAC, and tamper-evident audit ledgers.">
+<meta name="twitter:image" content="https://stratasre.com/assets/og.png?v=2026-11-23a">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/assets/theme.js?v=2026-11-23a"></script>
+<link rel="stylesheet" href="/assets/style.css?v=2026-11-23b">
+<noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Strata Security, Privacy & Production Hardening Architecture",
+  "description": "Pre-WAL privacy funnel, tlsx SPIFFE mTLS, ChaCha20/AES-256-GCM encryption at rest, compiled access policy, SSRF netguard, and audit trails.",
+  "url": "https://stratasre.com/security/",
+  "dateModified": "2026-11-23",
+  "author": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" },
+  "publisher": { "@type": "Person", "name": "radryc", "url": "https://github.com/radryc" }
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="Strata home">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+        <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+      </svg>
+      <span class="brand-word">STRATA</span>
+      <span class="brand-sub">/ OSS</span>
+    </a>
+
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="/">Overview</a>
+      <a href="/architecture/">Architecture</a>
+      <a href="/systems/">Systems</a>
+      <a href="/benchmarks/">Benchmarks</a>
+      <a href="/security/" aria-current="page">Security</a>
+      <a href="/#about">About</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <svg class="theme-icon theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg class="theme-icon theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>
+        </svg>
+      </button>
+      <a class="btn btn-ghost btn-sm nav-github" href="https://github.com/radryc/strata" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="subhero" id="top">
+    <div class="hero-aurora" aria-hidden="true"></div>
+    <div class="wrap">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Overview</a><span aria-hidden="true">/</span><span>Security</span>
+      </nav>
+      <p class="eyebrow"><span class="pulse-dot"></span> Defense in depth · strata/docs/hardening.md</p>
+      <h1>Privacy before disk.<br><span class="grad">SPIFFE mTLS everywhere.</span></h1>
+      <p class="subhero-lead">Strata enforces fail-closed security contracts across all five planes: pre-WAL PII/PCI HMAC tokenization, hot-reloading SPIFFE mTLS, ChaCha20-Poly1305 &amp; AES-256-GCM envelope encryption, compiled RBAC, SSRF fail-closed DNS checks, and tamper-evident audit chains.</p>
+
+      <div class="subhero-stats">
+        <div class="subhero-stat">
+          <b>Pre-WAL</b>
+          <span>Secrets &amp; PCI scrubbed before fsync</span>
+        </div>
+        <div class="subhero-stat">
+          <b>SPIFFE</b>
+          <span>mtime hot-reload mTLS across 6 planes</span>
+        </div>
+        <div class="subhero-stat">
+          <b>AEAD</b>
+          <span>ChaCha20 + PKGRv2 AES-256-GCM keys</span>
+        </div>
+        <div class="subhero-stat">
+          <b>Fail-Closed</b>
+          <span>SQL, netguard SSRF, and OIDC checks</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="subnav-wrap">
+    <div class="wrap">
+      <nav class="subnav" aria-label="Security sections">
+        <a href="#privacy" class="is-active">Pre-WAL Privacy</a>
+        <a href="#mtls">SPIFFE mTLS</a>
+        <a href="#encryption">Encryption at Rest</a>
+        <a href="#rbac">Compiled RBAC</a>
+        <a href="#isolation">SSRF &amp; Supply Chain</a>
+        <a href="#audit">Audit &amp; AI Gates</a>
+        <a href="#checklist">Hardening Env</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- PRE-WAL PRIVACY FUNNEL -->
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">One-way privacy funnel</p>
+          <h2 class="reveal">Tokenize before<br><span class="dim">a byte hits WAL.</span></h2>
+        </div>
+        <p class="section-lead reveal">Doctor's <code>internal/privacy</code> engine runs during OTLP flattening — before records ever reach the local <code>fsync</code> WAL or MonoFS logengine.</p>
+      </div>
+
+      <div class="state-strip reveal" style="margin-bottom: 24px;" aria-label="Pre-WAL privacy pipeline">
+        <span class="state-node is-accent">OTLP Ingest (:4317/:4318)</span><span class="state-arrow">→</span>
+        <span class="state-node">Flatten Attributes</span><span class="state-arrow">→</span>
+        <span class="state-node is-amber">Secret Redact [REDACTED]</span><span class="state-arrow">→</span>
+        <span class="state-node is-violet">HMAC-SHA256 + Luhn PAN Scan</span><span class="state-arrow">→</span>
+        <span class="state-node">Per-Signal WAL fsync</span><span class="state-arrow">→</span>
+        <span class="state-node is-green">Encrypted Parquet + Bluge</span>
+      </div>
+
+      <div class="table-wrap reveal">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Signal / Pattern Matched</th>
+              <th>Where Applied</th>
+              <th>Deterministic Output</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Credential keys</strong> (<code>password</code>, <code>secret</code>, <code>token</code>, <code>authorization</code>, <code>cookie</code>, <code>session</code>, <code>apikey</code>, <code>jwt</code>, <code>bearer</code>, <code>credential</code>)</td>
+              <td>Doctor pre-WAL</td>
+              <td><code>[REDACTED]</code></td>
+            </tr>
+            <tr>
+              <td><strong>Secret value signatures</strong> (Bearer headers, JWTs, <code>sk-...</code>, <code>pk-...</code>, API keys)</td>
+              <td>Doctor pre-WAL + free text</td>
+              <td><code>[REDACTED]</code></td>
+            </tr>
+            <tr>
+              <td><strong>Identity, PII &amp; PCI keys</strong> (<code>email</code>, <code>user</code>, <code>account</code>, <code>client</code>, <code>ip</code>, <code>remote_addr</code>, <code>pan</code>, <code>card_number</code>, <code>cvv</code>, <code>cvc</code>, <code>ssn</code>, <code>tin</code>, <code>iban</code>, <code>routing_number</code>, <code>pin</code>, <code>dob</code>, <code>passport</code>, <code>phone</code>)</td>
+              <td>Doctor pre-WAL (per-tenant <code>DOCTOR_PRIVACY_HMAC_KEY</code>)</td>
+              <td><code>tok_&lt;16 hex&gt;</code> (correlatable within tenant, irreversible)</td>
+            </tr>
+            <tr>
+              <td><strong>Free-text scans</strong> (embedded JWTs, emails, IPv4 addresses, SSNs, Luhn-validated PANs)</td>
+              <td>Doctor log &amp; span bodies</td>
+              <td>Tokenized / redacted in place before WAL append</td>
+            </tr>
+            <tr>
+              <td><strong>Cardinality &amp; cross-trace pruning</strong> (span links, scope name/version, exemplars &gt; 1, exp-histogram buckets)</td>
+              <td>Doctor ingest</td>
+              <td>Dropped or reduced to <code>_count</code> / <code>_sum</code></td>
+            </tr>
+            <tr>
+              <td><strong>Outbound LLM guard</strong> (private keys, Bearer, AWS <code>AKIA...</code>, <code>sk-...</code>, SSN, PAN)</td>
+              <td>Agent <code>redact_sensitive_text</code></td>
+              <td>Stripped before any external LLM request</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPIFFE MTLS -->
+  <section class="section" id="mtls">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Transport security · tlsx</p>
+          <h2 class="reveal">Hot-reload mTLS.<br><span class="dim">SPIFFE URI SANs.</span></h2>
+        </div>
+        <p class="section-lead reveal">All Go engines (MonoFS, Guardian, Doctor, LB-Edge, KVS) share <code>github.com/radryc/tlsx</code>; Agent's Python listener follows the identical <code>STRATA_TLS_*</code> mount contract.</p>
+      </div>
+
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="blue">
+          <span class="spec-kicker">Zero-Downtime Leaf Rotation</span>
+          <h3>mtime-checked handshakes &amp; URI SAN allowlists</h3>
+          <p>Leaf certificate and key files at <code>/var/run/secrets/strata-tls/{tls.crt,tls.key}</code> are checked by modification time on handshake, rotating Vault/cert-manager certs without restarting processes.</p>
+          <ul class="spec-list">
+            <li><code>STRATA_TLS_MODE=required</code> enforces mutual TLS with peer allowlists via <code>STRATA_TLS_ALLOWED_SPIFFE_IDS</code> and <code>EXPECTED_SPIFFE_IDS</code>.</li>
+            <li><code>tlsx</code> CLI generates local CA + per-service Secrets (<code>gen</code>, <code>verify</code>, <code>install</code>) for kind; production swaps in cert-manager or SPIFFE with zero code changes.</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="blue">
+          <span class="spec-kicker">No Plaintext Non-Loopback &amp; Strict Deadlines</span>
+          <h3>Pusher guards &amp; Slowloris protection</h3>
+          <p>Non-loopback pusher read APIs (<code>guardian-pusher-aws</code> <code>:19090</code>, <code>guardian-pusher-gcp</code> <code>:19091</code>) refuse plaintext HTTP even if a bearer token is configured unless explicit allow-plaintext flags are passed.</p>
+          <ul class="spec-list">
+            <li><code>guardiand</code>, <code>doctor-sentinel</code>, and <code>lb</code> enforce <code>ReadHeaderTimeout</code> 10s, <code>ReadTimeout</code> 30s, <code>WriteTimeout</code> 60s, and <code>IdleTimeout</code> 120s.</li>
+            <li><code>lb</code> TCP proxy enforces a 5-minute idle read/write deadline and sanitizes <code>Host</code> headers in <code>/services</code>.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENCRYPTION AT REST -->
+  <section class="section" id="encryption">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Cryptographic storage</p>
+        <h2 class="reveal">Encryption at Rest &amp; Key Rotation</h2>
+      </div>
+
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">Packager &amp; cfg</span>
+          <h3>ChaCha20-Poly1305 AEAD &amp; weak-key rejection</h3>
+          <p>Every file stored via <code>packager</code> uses AEAD with a unique random 12-byte nonce — preventing nonce reuse under a single master key — plus an encrypted, zstd-compressed master index that hides directory layout.</p>
+          <ul class="spec-list">
+            <li>New archive writers encrypt every entry by default and reject <code>NoEncrypt</code> with <code>ErrEncryptionRequired</code>; path traversal (<code>..</code> / absolute paths) is blocked.</li>
+            <li><code>cfg</code> requires exactly 32 cryptographically random bytes and rejects all-zero, repeated-byte, or trivially weak keys at startup (fix <code>M-7</code>).</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="green">
+          <span class="spec-kicker">Telemetry &amp; Token Shards</span>
+          <h3>PKGRv2 AES-256-GCM envelopes</h3>
+          <p><code>pipeline/envelope.go</code> implements <code>PKGRv2</code> wrapping per-object DEKs with AES-256-GCM KEKs and <code>KeyRingProvider</code> rotation.</p>
+          <ul class="spec-list">
+            <li>Set <code>MONOFS_TELEMETRY_ENCRYPTION=envelope</code> and <code>MONOFS_TELEMETRY_ENCRYPTION_MODE=enforce</code> to reject plaintext telemetry chunks on read.</li>
+            <li>Doctor federation stores 50k pusher credentials across 256 AES-256-GCM encrypted token shards (<code>DOCTOR_FEDERATION_TOKEN_KEY</code>), never embedded in catalog snapshots or logs.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPILED RBAC -->
+  <section class="section" id="rbac">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Compiled RBAC policy</p>
+          <h2 class="reveal">One compiled policy.<br><span class="dim">Default deny.</span></h2>
+        </div>
+        <p class="section-lead reveal">Guardian compiles <code>access/envs/*.yaml</code> into a versioned policy bundle served at <code>/api/access/policy</code> — the single runtime authorization source for Guardian, MonoFS, Doctor, and SQL.</p>
+      </div>
+
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="violet">
+          <span class="spec-kicker">Five Enforced Scopes</span>
+          <h3><code>partitions · logs · traces · sql · monofs</code></h3>
+          <p>Scopes default to deny. Roles (<code>viewer</code>, <code>ingester</code>, <code>maintainer</code>, <code>admin</code>) are scope-aware: an <code>admin</code> grant on <code>aws-demo</code> never implicitly opens unrelated partitions or signals.</p>
+          <ul class="spec-list">
+            <li>Federated SQL is fail-closed: MonoFS router enforces <code>--sql-require-policy</code> (default true).</li>
+            <li>Grafana uses <code>oauthPassThru: true</code> so queries forward the user's OIDC token; <code>OIDCVerifier</code> rejects empty <code>sub</code>/<code>client_id</code> claims.</li>
+            <li><code>guardiand</code> never trusts <code>X-Forwarded-For</code> / <code>Forwarded</code> requests as loopback anonymous access.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card reveal">
+          <div class="snippet-bar">
+            <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="snippet-title">guardianctl access · policy verification</span>
+            <button class="copy-btn" type="button" data-copy>Copy</button>
+          </div>
+<pre tabindex="0"><code><span class="tok-comment"># lint against partition catalog, explain effective grants, and publish</span>
+<span class="tok-cmd">guardianctl</span> access lint    --file envs/prod.yaml --catalog-file catalog.json
+<span class="tok-cmd">guardianctl</span> access explain --user observability@example.com --raw envs/prod.yaml
+<span class="tok-cmd">guardianctl</span> access who-can --scope traces --partition aws-demo --raw envs/prod.yaml
+<span class="tok-cmd">guardianctl</span> access publish --file envs/prod.yaml --env prod</code></pre>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SSRF, REPLAY, EXECUTOR ISOLATION -->
+  <section class="section" id="isolation">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Network &amp; build isolation</p>
+        <h2 class="reveal">SSRF, Replay &amp; Supply Chain</h2>
+      </div>
+
+      <div class="three-col">
+        <article class="spec-card reveal" data-accent="amber">
+          <span class="spec-kicker">doctor / netguard</span>
+          <h3>Fail-closed SSRF DNS gate</h3>
+          <p>With <code>DOCTOR_BACKEND_ALLOW_PRIVATE=false</code> and webhook HTTPS required, <code>netguard</code> resolves DNS hostnames and blocks loopback, RFC1918, non-HTTP(S), and cloud metadata <code>169.254.0.0/16</code>.</p>
+        </article>
+        <article class="spec-card reveal" data-accent="amber">
+          <span class="spec-kicker">Guardian Alerts</span>
+          <h3>Replay-protected V2 webhooks</h3>
+          <p>Alert webhooks emit <code>X-Guardian-Timestamp</code> + <code>X-Guardian-Signature-V2: sha256=&lt;hmac(ts + "." + body)&gt;</code> so receivers reject replayed or stale alerts.</p>
+        </article>
+        <article class="spec-card reveal" data-accent="amber">
+          <span class="spec-kicker">Build &amp; CI Isolation</span>
+          <h3>Env allowlists &amp; checksum gates</h3>
+          <p><code>monofs-pipeline-worker</code> filters subprocess envs via a strict allowlist (never leaking worker tokens); <code>Dockerfile.pusher-gcp</code> aborts build without verified <code>TOFU_SHA256</code>.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUDIT & SAFE AI -->
+  <section class="section" id="audit">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow reveal">Accountability &amp; safety</p>
+        <h2 class="reveal">Tamper-Evident Audits &amp; AI Gates</h2>
+      </div>
+
+      <div class="two-col">
+        <article class="spec-card reveal" data-accent="cyan">
+          <span class="spec-kicker">kvs + doctor + nightwatch</span>
+          <h3>Hash-chained ledgers &amp; fail-stop writer chains</h3>
+          <p><code>KVS_AUDIT_LOG</code> and <code>DOCTOR_AUDIT_LOG</code> record both mutations and sensitive telemetry read queries (<code>/v1/logs</code>, <code>/v1/traces</code>, <code>/v1/sql/query</code>).</p>
+          <ul class="spec-list">
+            <li>Both <code>kvs</code> and <code>agent</code> halt writer chains immediately after any unacknowledged audit insert (never silently skipping broken chain links).</li>
+            <li>Nightwatch persists append-only hash-chained SQLite events preserving query text, time range, source, and exact result SHA hash.</li>
+          </ul>
+        </article>
+
+        <article class="spec-card reveal" data-accent="cyan">
+          <span class="spec-kicker">Agent &amp; Nightwatch Guardrails</span>
+          <h3>Session-bound confirmation &amp; read-only shadow mode</h3>
+          <p>Interactive mutations require <code>confirm=true</code> via <code>resolve_approval</code> bound strictly to the active <code>session_id</code>. Steve is excluded from all infrastructure mutation tools at prompt-build and execution time.</p>
+          <ul class="spec-list">
+            <li>Nightwatch has zero Guardian/Doctor/Sentinel write tools and zero shell tool; telemetry payloads are treated strictly as untrusted data.</li>
+            <li>CORS restricts credentials whenever wildcard origins are absent; <code>lagent_sso</code> sets <code>Secure=True</code> behind TLS ingress.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTION HARDENING SNIPPET -->
+  <section class="section" id="checklist">
+    <div class="wrap">
+      <div class="section-head split">
+        <div>
+          <p class="eyebrow reveal">Production toggles</p>
+          <h2 class="reveal">Hardening baseline.<br><span class="dim">Copy &amp; enforce.</span></h2>
+        </div>
+        <p class="section-lead reveal">Exact environment flags from <code>strata/docs/hardening.md</code> to lock down a cluster before sharing traffic or regulated logs.</p>
+      </div>
+
+      <div class="snippet-card reveal">
+        <div class="snippet-bar">
+          <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="snippet-title">production-hardening.env</span>
+          <button class="copy-btn" type="button" data-copy>Copy</button>
+        </div>
+<pre tabindex="0"><code><span class="tok-comment"># 1. Shared mTLS (tlsx contract across MonoFS, Guardian, Doctor, LB, KVS)</span>
+<span class="tok-key">STRATA_TLS_MODE</span>=required
+<span class="tok-key">STRATA_TLS_REQUIRE_CLIENT_CERT</span>=true
+<span class="tok-key">STRATA_TLS_ALLOWED_SPIFFE_IDS</span>=spiffe://strata.local/ns/monofs/sa/monofs-router
+
+<span class="tok-comment"># 2. Compiled RBAC enforcement across all planes</span>
+<span class="tok-key">MONOFS_ACCESS_ENFORCE</span>=true
+<span class="tok-key">GUARDIAN_REQUIRE_UI_AUTH</span>=true
+<span class="tok-key">GUARDIAN_ALLOW_LOOPBACK_ANONYMOUS</span>=false
+<span class="tok-key">GUARDIAN_ACCESS_ENFORCE</span>=true
+<span class="tok-key">GUARDIAN_ENABLE_HSTS</span>=true
+<span class="tok-key">DOCTOR_ACCESS_MODE</span>=enforce
+<span class="tok-key">DOCTOR_ACCESS_ENFORCE_LOGS</span>=true
+<span class="tok-key">DOCTOR_ACCESS_ENFORCE_TRACES</span>=true
+
+<span class="tok-comment"># 3. Pre-WAL privacy, SSRF netguard, telemetry envelope encryption &amp; audit logs</span>
+<span class="tok-key">DOCTOR_PRIVACY_HMAC_KEY</span>=&lt;high-entropy-secret&gt;
+<span class="tok-key">DOCTOR_BACKEND_ALLOW_PRIVATE</span>=false
+<span class="tok-key">DOCTOR_SENTINEL_WEBHOOK_ALLOW_PRIVATE</span>=false
+<span class="tok-key">DOCTOR_SENTINEL_WEBHOOK_REQUIRE_HTTPS</span>=true
+<span class="tok-key">DOCTOR_AUDIT_LOG</span>=/var/log/doctor/audit.jsonl
+<span class="tok-key">MONOFS_TELEMETRY_ENCRYPTION</span>=envelope
+<span class="tok-key">MONOFS_TELEMETRY_ENCRYPTION_MODE</span>=enforce</code></pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="/" aria-label="Strata home">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.6 20.4 7v10L12 21.4 3.6 17V7L12 2.6Z"/>
+          <path d="m3.6 7 8.4 4.7L20.4 7M12 11.7v9.7"/>
+        </svg>
+        <span class="brand-word">STRATA</span>
+        <span class="brand-sub">/ OSS</span>
+      </a>
+      <p>Open-source (Apache-2.0) systems infrastructure engineered in the open by <a href="https://github.com/radryc" target="_blank" rel="noopener">@radryc</a>. 13 public repositories · 5 connected planes · 734 test files.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <div>
+        <span class="footer-head">Hub Pages</span>
+        <a href="/">Overview</a>
+        <a href="/architecture/">Architecture</a>
+        <a href="/systems/">13 Repositories</a>
+        <a href="/benchmarks/">Benchmark Lab</a>
+        <a href="/security/">Security &amp; Privacy</a>
+        <a href="/#quickstart">Local Bootstrap</a>
+      </div>
+      <div>
+        <span class="footer-head">Core Planes</span>
+        <a href="https://github.com/radryc/strata" target="_blank" rel="noopener">Strata Umbrella</a>
+        <a href="https://github.com/radryc/monofs" target="_blank" rel="noopener">MonoFS</a>
+        <a href="https://github.com/radryc/guardian" target="_blank" rel="noopener">Guardian</a>
+        <a href="https://github.com/radryc/doctor" target="_blank" rel="noopener">Doctor</a>
+        <a href="https://github.com/radryc/lb" target="_blank" rel="noopener">LB-Edge</a>
+        <a href="https://github.com/radryc/agent" target="_blank" rel="noopener">Agent</a>
+      </div>
+      <div>
+        <span class="footer-head">Primitives &amp; Tools</span>
+        <a href="https://github.com/radryc/sqlagregator" target="_blank" rel="noopener">sqlagregator</a>
+        <a href="https://github.com/radryc/cfg" target="_blank" rel="noopener">cfg</a>
+        <a href="https://github.com/radryc/kvs" target="_blank" rel="noopener">kvs (Raft KV)</a>
+        <a href="https://github.com/radryc/packager" target="_blank" rel="noopener">packager</a>
+        <a href="https://github.com/radryc/tlsx" target="_blank" rel="noopener">tlsx (SPIFFE mTLS)</a>
+        <a href="https://github.com/radryc?tab=repositories" target="_blank" rel="noopener">all public repos ↗</a>
+      </div>
+    </nav>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© <span id="year">2026</span> Strata · open source · Apache-2.0 · <time datetime="2026-11-23">last updated 23 Nov 2026</time></span>
+    <span class="footer-status"><i></i> Built in public · 13 repos · @radryc</span>
+  </div>
+</footer>
+
+<script src="/assets/app.js?v=2026-11-23a" defer></script>
+</body>
+</html>

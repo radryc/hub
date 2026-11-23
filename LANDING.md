@@ -1,15 +1,15 @@
-# Strata landing page — `stratasre.com` and `sretoolhub.com`
+# Strata engineering hub — `stratasre.com` and `sretoolhub.com`
 
-The static Strata landing page lives in [`landing/`](landing/). It is a single-page
-site with no build step, no framework, and no runtime dependencies. Upload or
-connect the folder to Cloudflare Pages and point both `stratasre.com` and
-`sretoolhub.com` at it.
+The static Strata engineering hub lives in [`landing/`](landing/). It is a
+multi-page static site with no build step, no framework, and no runtime
+dependencies. Upload or connect the folder to Cloudflare Pages and point both
+`stratasre.com` and `sretoolhub.com` at it.
 
-`stratasre.com` is the canonical host. `sretoolhub.com` serves the same page and
-inherits the canonical URL from the HTML, so search engines consolidate the two
+`stratasre.com` is the canonical host. `sretoolhub.com` serves the same pages and
+inherits the canonical URLs from the HTML, so search engines consolidate the two
 domains instead of treating them as duplicate sites.
 
-The page presents Strata as an open-source, self-hosted project developed in
+The hub presents Strata as an open-source, self-hosted project developed in
 the open — not as a company or a hosted product. The project is licensed under
 the Apache License 2.0.
 
@@ -17,14 +17,22 @@ the Apache License 2.0.
 
 ```text
 landing/
-├── index.html            # the page
+├── index.html            # overview, metrics proof bar, 5 planes, flow, FAQ
+├── architecture/
+│   └── index.html        # topology SVG, 6 bets, state matrix, ports, failures
+├── systems/
+│   └── index.html        # filterable 13-repo directory + subsystem deep dives
+├── benchmarks/
+│   └── index.html        # measured throughput, latency matrix, 150k chaos, nzip R&D
+├── security/
+│   └── index.html        # pre-WAL privacy, SPIFFE mTLS, AEAD, RBAC, audits
 ├── 404.html              # on-brand not-found page
 ├── assets/
 │   ├── style.css         # design system + responsive layout
 │   ├── tokens.css        # generated Strata UI tokens
 │   ├── ui.css            # shared Strata UI primitives
 │   ├── theme.js          # applies the saved light/dark theme before paint
-│   ├── app.js            # nav, reveals, tabs, copy, tilt, spotlight
+│   ├── app.js            # nav, reveals, tabs, copy, filters, tilt, spotlight
 │   ├── favicon.svg       # Strata hexagon mark
 │   ├── icon-180.png      # Apple touch icon
 │   ├── fonts/            # self-hosted Manrope/Space Grotesk/JetBrains Mono
@@ -105,9 +113,10 @@ hugo --minify
 The `sretoolhub-build` workflow does the same thing and uploads `public/` as the
 Pages artifact.
 
-## Editing the page
+## Editing the site
 
-- Copy, product claims, and section order all live in `landing/index.html`.
+- Overview copy lives in `landing/index.html`; deep-dive pages live in
+  `landing/{architecture,systems,benchmarks,security}/index.html`.
 - The `#answer` short-answer card is the AI Overview / definition block. Keep it
   factual and under 90 words.
 - The Nightwatch section is the adoption path for Sentinel alerts and shadow-mode
@@ -116,8 +125,7 @@ Pages artifact.
 - Colors, type, spacing, and breakpoints live in `landing/assets/style.css`.
   Theme tokens come from `landing/assets/tokens.css`; the light theme is the
   `daylight` token set and is toggled by `landing/assets/theme.js`.
-- The five layer rows and the code examples are deliberately aligned with
-  `docs/products/{monofs,guardian,doctor,lb-edge,agent}.md`.
+- All pages share root-relative asset paths (`/assets/...`).
 - To regenerate the social card after changing the positioning, run the script
   in `tools/generate-og.py` from `hub/`:
 
@@ -130,22 +138,25 @@ Pages artifact.
 
 `_headers` caches `/assets/*` for one year with `immutable`. When you change
 `style.css`, `app.js`, `theme.js`, or `tokens.css`, bump the `?v=` query in
-`landing/index.html` and `landing/404.html` (and the `@import` in
-`style.css`). `index.html` itself is served with `must-revalidate`, so a cached
-HTML shell will pick up the new asset URLs immediately.
+all `landing/**/*.html` files (and the `@import` in `style.css`). HTML pages
+themselves are served with `must-revalidate`, so cached HTML shells pick up the
+new asset URLs immediately.
 
-### If you edit the JSON-LD block
+### If you edit any JSON-LD block
 
-`landing/_headers` uses a CSP hash for the inline `application/ld+json` script.
-If you change that block, recompute the hash and replace the `sha256-…` value
-in `_headers`:
+`landing/_headers` uses SHA-256 CSP hashes for every inline
+`application/ld+json` script across the hub pages. If you change any JSON-LD
+block, recompute the hashes across all HTML files and update `script-src` in
+`_headers`:
 
 ```bash
 python3 - <<'PY'
-import base64, hashlib, re
-html = open('landing/index.html', encoding='utf-8').read()
-body = re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1)
-print(base64.b64encode(hashlib.sha256(body.encode()).digest()).decode())
+import base64, hashlib, pathlib, re
+for p in sorted(pathlib.Path('landing').rglob('*.html')):
+    html = p.read_text(encoding='utf-8')
+    for m in re.finditer(r'<script type="application/ld\+json">(.*?)</script>', html, re.S):
+        h = base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode()
+        print(p, f"'sha256-{h}'")
 PY
 ```
 

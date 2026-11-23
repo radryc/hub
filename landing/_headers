@@ -1,5 +1,5 @@
 /*
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'sha256-MrA9MJp6cPdYXBYQ1hXt/HlYQOkfPX1/bLWaafc7v4o='; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'sha256-Lzjt5gqGJDZ6PbgIqmIj7k56sSuhsdrlN1xuqOngL1k=' 'sha256-8hKzNbF9TUqsCpUp1bhWhIN5GvGfx3mTgF4HoSHtp5Q=' 'sha256-CzEmHMXCG9djavOdfEhG1lVxVfVBbY4DXNRXwMtUvKA=' 'sha256-PHAIcAkaZCaxR2unpfYFyHv3HPpBryPFu3gR1nI3V0E=' 'sha256-AkTQXCCAf5LwZgOEP78CMB9aU38102UTUyL94ta6kGw='; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
@@ -10,6 +10,18 @@
   Cache-Control: public, max-age=31536000, immutable
 
 /index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/architecture/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/systems/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/benchmarks/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/security/*
   Cache-Control: public, max-age=0, must-revalidate
 
 /404.html
