@@ -18,6 +18,11 @@ The static site in [`landing/`](landing/) is the **single source of truth**:
 - `/benchmarks/` (`landing/benchmarks/index.html`) — Measured throughput & latency matrix, `kind-strata` soak/failover results, 150k-target chaos budgets, and standalone `nzip` R&D ablations
 - `/security/` (`landing/security/index.html`) — Pre-WAL privacy funnel, `tlsx` SPIFFE mTLS, ChaCha20/AES-256-GCM encryption, compiled RBAC, SSRF `netguard`, and hash-chained ledgers
 
+The contact form posts to a Pages Function (`functions/api/contact.js`) that
+proxies to the private `stratasre-contact` Worker and sends through Cloudflare
+Email Sending. Configuration and deploy order are documented in
+[`LANDING.md`](LANDING.md#contact-form).
+
 Hugo is kept only as a build wrapper for hosts that expect a Hugo project; it
 copies `landing/` into `public/` verbatim.
 

@@ -1,3 +1,9 @@
 name = "stratasre"
 pages_build_output_dir = "landing"
 compatibility_date = "2026-10-28"
+
+# Contact form mailer (contact-worker/). Pages Functions cannot bind Email
+# Sending directly, so /api/contact proxies to this private Worker.
+[[services]]
+binding = "CONTACT"
+service = "stratasre-contact"

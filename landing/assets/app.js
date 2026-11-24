@@ -385,23 +385,129 @@
     });
   }
 
-  /* Contact form (static mailto builder + email copy) */
+  /* Contact form: POST /api/contact (Pages Function -> stratasre-contact Worker),
+     fall back to the visitor's mail client when the endpoint is unavailable
+     (static exports, GitHub Pages, outages). */
   const contactForm = $('#contactForm');
   const contactStatus = $('#contactStatus');
-  if (contactForm) {
-    contactForm.addEventListener('submit', (event) => {
+  if (contactForm && contactStatus) {
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    const mountedAt = performance.now();
+
+    const mailtoHref = (to, subject, body) =>
+      `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    const setStatus = (text) => { contactStatus.textContent = text; };
+
+    const renderFallback = (to, subject, body, leadText) => {
+      contactStatus.textContent = '';
+
+      const lead = document.createElement('span');
+      lead.textContent = leadText;
+
+      const link = document.createElement('a');
+      link.href = mailtoHref(to, subject, body);
+      link.textContent = 'open the email manually';
+
+      const sep = document.createTextNode(' or ');
+
+      const copy = document.createElement('button');
+      copy.type = 'button';
+      copy.className = 'contact-copy';
+      copy.textContent = 'copy the message';
+      copy.addEventListener('click', async () => {
+        const text = `To: ${to}\nSubject: ${subject}\n\n${body}`;
+        try {
+          await navigator.clipboard.writeText(text);
+          copy.textContent = 'copied to clipboard';
+          setTimeout(() => { copy.textContent = 'copy the message'; }, 2400);
+        } catch {
+          // Clipboard unavailable (insecure context, permissions): show selectable text.
+          const box = document.createElement('textarea');
+          box.className = 'contact-fallback-text';
+          box.readOnly = true;
+          box.value = text;
+          contactStatus.append(box);
+          box.focus();
+          box.select();
+        }
+      });
+
+      contactStatus.append(lead, link, sep, copy);
+    };
+
+    const openMailClient = (href) => {
+      try {
+        const anchor = document.createElement('a');
+        anchor.href = href;
+        anchor.rel = 'noopener';
+        anchor.click();
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const friendlyErrors = {
+      name_required: 'Add your name.',
+      email_invalid: 'That email address does not look valid.',
+      subject_required: 'Add a subject.',
+      message_too_short: 'Add a little more detail (at least 10 characters).',
+      rejected: 'That message looked automated. Email radryc@sretoolhub.com instead.',
+      too_fast: 'That message looked automated. Email radryc@sretoolhub.com instead.',
+    };
+
+    contactForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const to = contactForm.dataset.contactEmail || 'radryc@sretoolhub.com';
+      if (!contactForm.reportValidity()) return;
+
       const fd = new FormData(contactForm);
+      const to = contactForm.dataset.contactEmail || 'radryc@sretoolhub.com';
       const name = String(fd.get('name') || '').trim();
       const email = String(fd.get('email') || '').trim();
       const subject = String(fd.get('subject') || 'Strata inquiry').trim();
       const message = String(fd.get('message') || '').trim();
+      const website = String(fd.get('website') || '');
       const body = `From: ${name} <${email}>\n\n${message}`;
-      const href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.location.href = href;
-      if (contactStatus) {
-        contactStatus.textContent = `Opening mail client for ${to}...`;
+
+      if (submitButton) submitButton.disabled = true;
+      setStatus('Sending your message…');
+
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            subject,
+            message,
+            website,
+            elapsedMs: Math.round(performance.now() - mountedAt),
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (response.ok && result.ok) {
+          contactForm.reset();
+          setStatus(`Message sent. I will reply to ${email}.`);
+          return;
+        }
+        if (response.status === 400 && friendlyErrors[result.error]) {
+          setStatus(friendlyErrors[result.error]);
+          return;
+        }
+        if (response.status === 429) {
+          renderFallback(to, subject, body, 'Too many messages right now. ');
+          return;
+        }
+        throw new Error(result.error || `HTTP ${response.status}`);
+      } catch {
+        // Static host without Functions, or a transient failure: hand off to mail.
+        openMailClient(mailtoHref(to, subject, body));
+        renderFallback(to, subject, body, 'Direct sending is unavailable. If your mail client did not open, ');
+      } finally {
+        if (submitButton) submitButton.disabled = false;
       }
     });
   }
