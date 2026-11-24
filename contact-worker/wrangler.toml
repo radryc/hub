@@ -1,0 +1,18 @@
+name = "stratasre-contact"
+main = "src/index.js"
+compatibility_date = "2026-10-28"
+
+# Private behind the Pages service binding; do not expose a workers.dev URL.
+workers_dev = false
+
+# Cloudflare Email Sending. The recipient must be a verified Email Routing
+# destination address in this account unless the domain is onboarded to
+# Email Sending (Workers Paid). See LANDING.md -> Contact form.
+[[send_email]]
+name = "EMAIL"
+destination_address = "radek.ryckowski@gmail.com"
+allowed_sender_addresses = [ "contact@stratasre.com" ]
+
+[vars]
+CONTACT_TO = "radek.ryckowski@gmail.com"
+CONTACT_FROM = "contact@stratasre.com"

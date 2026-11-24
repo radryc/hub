@@ -113,6 +113,54 @@ hugo --minify
 The `sretoolhub-build` workflow does the same thing and uploads `public/` as the
 Pages artifact.
 
+## Contact form
+
+The form at `/#contact` sends mail server-side; it no longer depends on the
+visitor's mail client. The path is:
+
+```
+browser -> POST /api/contact            (functions/api/contact.js, Pages Function)
+        -> service binding CONTACT      (wrangler.toml)
+        -> stratasre-contact Worker     (contact-worker/)
+        -> Cloudflare Email Sending     (send_email binding EMAIL)
+```
+
+Configuration lives in `contact-worker/wrangler.toml`:
+
+- `CONTACT_TO` — recipient. Must be a **verified Email Routing destination
+  address** in this account while the domain is not onboarded to Email Sending
+  (arbitrary recipients need Workers Paid). Today the only verified address is
+  `radek.ryckowski@gmail.com`, which is also where `radryc@sretoolhub.com`
+  forwards.
+- `CONTACT_FROM` — sender; must be an address on a Cloudflare zone in the
+  account (`contact@stratasre.com`).
+- `destination_address` / `allowed_sender_addresses` — hard restrictions on the
+  binding, so a compromised function cannot send anywhere else.
+- `workers_dev = false` — the Worker is reachable only through the Pages
+  service binding.
+
+Deploy order matters: the Worker first, then the Pages project.
+
+```bash
+cd hub/contact-worker && npx wrangler deploy
+cd hub && npx wrangler pages deploy landing --project-name stratasre
+```
+
+`landing/_routes.json` limits Function invocations to `/api/*`, so static
+traffic stays on the free unlimited path. On static-only hosts (GitHub Pages,
+Hugo output) the endpoint is absent and the form automatically falls back to a
+`mailto:` hand-off with a copy-to-clipboard escape hatch.
+
+Spam controls: hidden `website` honeypot, minimum form fill time (1.5 s), input
+length caps, CR/LF stripping before header interpolation, and HTML escaping.
+Cloudflare rate limiting can be added at the zone level if volume ever
+justifies it.
+
+> Email Routing is enabled on `sretoolhub.com` with no custom rules, so mail to
+> `radryc@sretoolhub.com` is dropped unless a forward rule
+> (`radryc@sretoolhub.com` -> verified destination) exists. That rule must stay
+> in place for the public address and the `mailto:` fallback to work.
+
 ## Editing the site
 
 - Overview copy lives in `landing/index.html`; deep-dive pages live in

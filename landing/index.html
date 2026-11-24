@@ -33,7 +33,7 @@
 <link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <script src="/assets/theme.js?v=2026-11-23a"></script>
-<link rel="stylesheet" href="/assets/style.css?v=2026-11-23c">
+<link rel="stylesheet" href="/assets/style.css?v=2026-11-24a">
 <noscript><style>.reveal{opacity:1;transform:none}.hero-title .word{opacity:1;transform:none}.ticker-track{animation:none}</style></noscript>
 <script type="application/ld+json">
 {
@@ -1256,9 +1256,12 @@ srv := grpc.NewServer(grpc.Creds(creds))
           <span>Message</span>
           <textarea name="message" rows="4" placeholder="What are you working on?" required></textarea>
         </label>
+        <div class="contact-hp" aria-hidden="true">
+          <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
         <div class="contact-foot">
-          <button class="btn btn-primary btn-sm" type="submit">Send via Email <span class="btn-arrow" aria-hidden="true">→</span></button>
-          <span class="contact-note" id="contactStatus" aria-live="polite">Opens your mail client addressed to <a href="mailto:radryc@sretoolhub.com">radryc@sretoolhub.com</a>.</span>
+          <button class="btn btn-primary btn-sm" type="submit">Send message <span class="btn-arrow" aria-hidden="true">→</span></button>
+          <span class="contact-note" id="contactStatus" aria-live="polite">Sent straight to radryc@sretoolhub.com — no mail client needed.</span>
         </div>
       </form>
     </div>
@@ -1314,6 +1317,6 @@ srv := grpc.NewServer(grpc.Creds(creds))
   </div>
 </footer>
 
-<script src="/assets/app.js?v=2026-11-23c" defer></script>
+<script src="/assets/app.js?v=2026-11-24a" defer></script>
 </body>
 </html>
